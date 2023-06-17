@@ -84,13 +84,24 @@ export class Tile
      * Gets a character.
      * @param x charX inside the tile.
      * @param y charY inside the tile.
-     * @returns [char, color, bgColor, protection]
-     * @todo make the way this returns less awful
      */
-    public getChar(x: number, y: number): Array<string | number | null>
+    public getChar(x: number, y: number): Char
     {
         var i = y * 16 + x;
 
-        return [this.content[i], this.color[i], this.bcolor[i], this.protections[i]];
+        return {
+            char: this.content[i],
+            color: this.color[i],
+            bgColor: this.bcolor[i],
+            protection: this.protections[i]
+        };
     }
+}
+
+export interface Char
+{
+    char: string,
+    color: number,
+    bgColor: number,
+    protection: number | null
 }

@@ -1,6 +1,6 @@
 import { WebSocket } from "ws";
 import { EventEmitter } from "events";
-import { Tile } from "./tile";
+import { Tile, Char } from "./tile";
 import * as utils from "./utils";
 
 export * as utils from "./utils";
@@ -361,9 +361,8 @@ export class Bot extends EventEmitter
 
     /**
      * Gets a character.
-     * @returns [char, color, bgColor, protection] or null if the tile isn't loaded
      */
-    public getChar(x: number, y: number): Array<string | number | null> | null
+    public getChar(x: number, y: number): Char | null
     {
         var [tileX, tileY, charX, charY] = utils.coordsCharToTile(x, y);
 
