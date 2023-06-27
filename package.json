@@ -18,13 +18,14 @@
     "author": "KKosty4ka",
     "license": "GPL-3.0",
     "devDependencies": {
+        "@types/follow-redirects": "^1.14.1",
+        "@types/node": "^20.3.2",
         "@types/qs": "^6.9.7",
+        "@types/ws": "^8.5.5",
         "typescript": "^5.0.4"
     },
     "dependencies": {
-        "@types/node": "^18.15.11",
-        "axios": "^1.3.5",
-        "qs": "^6.11.1",
+        "follow-redirects": "^1.15.2",
         "rainbowvis.js": "^1.1.1",
         "ws": "^8.13.0"
     }

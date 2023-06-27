@@ -1,25 +1,46 @@
-import { default as axios } from "axios";
-import * as qs from "qs";
+import { https } from "follow-redirects";
+import * as qs from "querystring";
 
-// TODO: uvias login stuff idk
-export async function uviasLogin(username: string, password: string)
+export function uviasLogin(loginName: string, password: string)
 {
-    var shit = await axios({
-        method: "post",
-        maxBodyLength: Infinity,
-        url: "https://uvias.com/api/auth/uvias",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        data: qs.stringify({
-            "service": "owot",
-            "loginname": username,
-            "pass": password,
-            "persistent": "on"
-        })
-    });
+    return new Promise((resolve, reject) =>
+    {
+        var req = https.request({
+            method: "POST",
+            hostname: "uvias.com",
+            path: "/api/auth/uvias",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            followRedirects: false
+        }, (res: any) => // sometimes i hate typescript
+        {
+            var cookie = res.headers["set-cookie"];
+            if (!cookie)
+            {
+                reject("no cookie");
+                return;
+            }
 
-    console.dir(shit.headers);
+            var token = /uviastoken=(.+?);/.exec(cookie[0]);
+            if (!token)
+            {
+                reject("no token");
+                return;
+            }
+
+            resolve(token[1]);
+        });
+        
+        req.write(qs.stringify({
+            service: "uvias",
+            loginname: loginName,
+            pass: password,
+            persistent: "on"
+        }));
+        
+        req.end();
+    });
 }
 
 /**
@@ -45,61 +66,61 @@ export function coordsCharToTile(x: number, y: number): Array<number>
 // 100% stolen from OWOT source code
 export function advancedSplit(str: string | Array<string>, noSurrog?: boolean, noComb?: boolean, norm?: boolean)
 {
-	if(str && str.constructor == Array) return str.slice(0);
-	var chars = [];
-	var buffer = "";
-	var surrogMode = false;
-	var charMode = false;
-	var combCount = 0;
-	var combLimit = 15;
-	for(var i = 0; i < str.length; i++) {
-		var char = str[i];
-		var code = char.charCodeAt(0);
-		if(code >= 0xDC00 && code <= 0xDFFF) {
-			if(surrogMode) {
-				buffer += char;
-			} else {
-				buffer = "";
-				chars.push("?");
-			}
-			surrogMode = false;
-			combCount = 0;
-			continue;
-		} else if(surrogMode) {
-			buffer = "";
-			chars.push("?");
-			surrogMode = false;
-			continue;
-		}
-		if(!noSurrog && code >= 0xD800 && code <= 0xDBFF) {
-			if(charMode) {
-				chars.push(buffer);
-			}
-			charMode = true;
-			surrogMode = true;
-			buffer = char;
-			continue;
-		}
-		if(!norm && ((code >= 0x0300 && code <= 0x036F) ||
-		  (code >= 0x1DC0 && code <= 0x1DFF) ||
-		  (code >= 0x20D0 && code <= 0x20FF) ||
-		  (code >= 0xFE20 && code <= 0xFE2F))) {
-			if(!noComb && charMode && combCount < combLimit) {
-				buffer += char;
-				combCount++;
-			}
-			continue;
-		} else {
-			if(charMode) {
-				chars.push(buffer);
-			}
-			combCount = 0;
-			charMode = true;
-			buffer = char;
-		}
-	}
-	if(buffer) {
-		chars.push(buffer);
-	}
-	return chars;
+    if(str && str.constructor == Array) return str.slice(0);
+    var chars = [];
+    var buffer = "";
+    var surrogMode = false;
+    var charMode = false;
+    var combCount = 0;
+    var combLimit = 15;
+    for(var i = 0; i < str.length; i++) {
+        var char = str[i];
+        var code = char.charCodeAt(0);
+        if(code >= 0xDC00 && code <= 0xDFFF) {
+            if(surrogMode) {
+                buffer += char;
+            } else {
+                buffer = "";
+                chars.push("?");
+            }
+            surrogMode = false;
+            combCount = 0;
+            continue;
+        } else if(surrogMode) {
+            buffer = "";
+            chars.push("?");
+            surrogMode = false;
+            continue;
+        }
+        if(!noSurrog && code >= 0xD800 && code <= 0xDBFF) {
+            if(charMode) {
+                chars.push(buffer);
+            }
+            charMode = true;
+            surrogMode = true;
+            buffer = char;
+            continue;
+        }
+        if(!norm && ((code >= 0x0300 && code <= 0x036F) ||
+          (code >= 0x1DC0 && code <= 0x1DFF) ||
+          (code >= 0x20D0 && code <= 0x20FF) ||
+          (code >= 0xFE20 && code <= 0xFE2F))) {
+            if(!noComb && charMode && combCount < combLimit) {
+                buffer += char;
+                combCount++;
+            }
+            continue;
+        } else {
+            if(charMode) {
+                chars.push(buffer);
+            }
+            combCount = 0;
+            charMode = true;
+            buffer = char;
+        }
+    }
+    if(buffer) {
+        chars.push(buffer);
+    }
+    return chars;
 }
