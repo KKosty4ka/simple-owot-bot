@@ -35,6 +35,7 @@ export class Tile
     private color: Array<number>;
     private bcolor: Array<number>;
     private protections: Array<number | null>;
+    private links: Array<string | Array<number> | null> = new Array(128).fill(null);
 
     /**
      * Creates a new Tile from tile data.
@@ -57,9 +58,20 @@ export class Tile
             this.color = data.properties.color ?? new Array(128).fill(0x000000);
             this.bcolor = data.properties.bcolor ?? new Array(128).fill(-1);
             this.protections = decodeProtection(data);
+
+            if (!data.properties.cell_props) return;
+
+            for (var cy in data.properties.cell_props)
+            {
+                for (var cx in data.properties.cell_props[cy])
+                {
+                    var link = data.properties.cell_props[cy][cx].link;
+                    this.links[parseInt(cy) * 16 + parseInt(cx)] = link.type === "url" ? link.url : [link.link_tileX, link.link_tileY];
+                }
+            }
         }
 
-        // TODO: links & protections & shit
+        // TODO: coord links and maybe more shit
     }
 
 
@@ -93,7 +105,8 @@ export class Tile
             char: this.content[i],
             color: this.color[i],
             bgColor: this.bcolor[i],
-            protection: this.protections[i]
+            protection: this.protections[i],
+            link: this.links[i]
         };
     }
 }
@@ -103,5 +116,6 @@ export interface Char
     char: string,
     color: number,
     bgColor: number,
-    protection: number | null
+    protection: number | null,
+    link: string | Array<number> | null
 }
