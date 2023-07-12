@@ -10,7 +10,7 @@ function unshiftProtection(value: number): number | null
 
 function decodeProtection(tile: any): Array<number | null>
 {
-    var output = new Array(128).fill(tile.properties.writability);
+    var output = new Array(128).fill(null);
     if (!tile.properties.char) return output;
     
     var data = tile.properties.char.substring(1);
@@ -34,6 +34,7 @@ export class Tile
     private content: Array<string>;
     private color: Array<number>;
     private bcolor: Array<number>;
+    private writability: number | null;
     private protections: Array<number | null>;
     private links: Array<string | Array<number> | null> = new Array(128).fill(null);
 
@@ -50,6 +51,7 @@ export class Tile
             this.content = new Array(128).fill(" ");
             this.color = new Array(128).fill(0x000000);
             this.bcolor = new Array(128).fill(-1);
+            this.writability = null;
             this.protections = new Array(128).fill(null);
         }
         else
@@ -57,6 +59,7 @@ export class Tile
             this.content = advancedSplit(data.content);
             this.color = data.properties.color ?? new Array(128).fill(0x000000);
             this.bcolor = data.properties.bcolor ?? new Array(128).fill(-1);
+            this.writability = data.properties.writability;
             this.protections = decodeProtection(data);
 
             if (!data.properties.cell_props) return;
@@ -100,12 +103,18 @@ export class Tile
     public getChar(x: number, y: number): Char
     {
         var i = y * 16 + x;
+        var prot = this.protections[i];
+
+        if (prot === null)
+        {
+            prot = this.writability;
+        }
 
         return {
             char: this.content[i],
             color: this.color[i],
             bgColor: this.bcolor[i],
-            protection: this.protections[i],
+            protection: prot,
             link: this.links[i]
         };
     }
