@@ -114,7 +114,7 @@ export class Bot extends EventEmitter
                     else this.writeBuffer.push(this.waitingEdits[i]);
                 }
 
-                if (this.waitingEdits.length === 0 && this.writeBuffer.length === 0) this.emit("writeBufferEmpty");
+                if (Object.keys(this.waitingEdits).length === 0 && this.writeBuffer.length === 0) this.emit("writeBufferEmpty");
             }
             else if (data.kind === "tileUpdate")
             {
@@ -275,7 +275,7 @@ export class Bot extends EventEmitter
         var edit = [Math.floor(y / 8), Math.floor(x / 16), y - Math.floor(y / 8) * 8, x - Math.floor(x / 16) * 16, Date.now(), char, ++this.nextEditId, color, bgcolor];
         
         this.writeBuffer.push(edit);
-        this.waitingEdits[edit[6]] = edit;
+        this.waitingEdits[edit[6].toString()] = edit;
     }
 
     /**
