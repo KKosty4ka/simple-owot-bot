@@ -323,6 +323,27 @@ export class Bot extends EventEmitter
         });
     }
 
+    /**
+     * Creates a coord link on the canvas.
+     */
+    public coordLink(x: number, y: number, link_tileX: number, link_tileY: number)
+    {
+        var [tileX, tileY, charX, charY] = utils.coordsCharToTile(x, y);
+
+        this.transmit({
+            kind: "link",
+            data: {
+                tileY,
+                tileX,
+                charY,
+                charX,
+                link_tileX,
+                link_tileY
+            },
+            type: "coord"
+        });
+    }
+
 
     /**
      * Fetches the tiles in the given rectangle.
