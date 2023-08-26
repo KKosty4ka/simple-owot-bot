@@ -290,7 +290,7 @@ export class Bot extends EventEmitter
         {
             var char = stext[i];
             
-            if (char.includes("\n"))
+            if (char === "\n")
             {
                 x = ix;
                 y++;
