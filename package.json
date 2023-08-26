@@ -26,7 +26,6 @@
     },
     "dependencies": {
         "follow-redirects": "^1.15.2",
-        "rainbowvis.js": "^1.1.1",
         "ws": "^8.13.0"
     }
 }
