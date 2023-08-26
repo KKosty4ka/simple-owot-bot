@@ -28,13 +28,13 @@ export class Bot extends EventEmitter
 
     /**
      * Creates a new bot.
-     * @param url The url to connect to.
+     * @param url The url to connect to. Please use ?hide=1 to prevent inflating the user count.
      * @param token An Uvias token to use. (Optional)
      * @example <caption>Connect to the front page of OWOT as an anon.</caption>
-     * var bot = new Bot("wss://ourworldoftext.com/ws/");
+     * var bot = new Bot("wss://ourworldoftext.com/ws/?hide=1");
      * await bot.waitForReady();
      * @example <caption>Connect to /myworld with an account.</caption>
-     * var bot = new Bot("wss://ourworldoftext.com/myworld/ws/", "blahblahblah|4564786786");
+     * var bot = new Bot("wss://ourworldoftext.com/myworld/ws/?hide=1", "blahblahblah|4564786786");
      * await bot.waitForReady();
      */
     public constructor(url: string, token?: string)
