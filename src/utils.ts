@@ -1,19 +1,33 @@
-import { https } from "follow-redirects";
+import { IncomingMessage } from "http";
+import * as https from "https";
 import * as qs from "querystring";
 
+/**
+ * Log in to Uvias.
+ * @returns A token.
+ * @todo Save the token and don't log in again.
+ */
 export function uviasLogin(loginName: string, password: string)
 {
     return new Promise((resolve, reject) =>
     {
+        var loginData = qs.stringify({
+            service: "uvias",
+            loginname: loginName,
+            pass: password,
+            persistent: "on"
+        })
+
         var req = https.request({
             method: "POST",
             hostname: "uvias.com",
             path: "/api/auth/uvias",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            followRedirects: false
-        }, (res: any) => // sometimes i hate typescript
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Length": Buffer.byteLength(loginData),
+                "Host": "uvias.com"
+            }
+        }, (res: IncomingMessage) =>
         {
             var cookie = res.headers["set-cookie"];
             if (!cookie)
@@ -32,13 +46,7 @@ export function uviasLogin(loginName: string, password: string)
             resolve(token[1]);
         });
         
-        req.write(qs.stringify({
-            service: "uvias",
-            loginname: loginName,
-            pass: password,
-            persistent: "on"
-        }));
-        
+        req.write(loginData);
         req.end();
     });
 }
