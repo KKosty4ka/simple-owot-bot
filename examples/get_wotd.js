@@ -6,15 +6,18 @@ const { Bot } = require("../lib");
 
 var bot = new Bot("wss://ourworldoftext.com/ws/?hide=1");
 
-bot.on("connected", () =>
+bot.on("connected", async () =>
 {
-    bot.fetchTiles(-1, 0, -1, 0);
+    await bot.fetchTiles(-1, 0, 0, 0);
 
-    // Bot.fetchTiles currently doesn't return a Promise, so waiting is the only option.
-    // This will be fixed soon™.
-    setTimeout(() =>
+    for (var x = -14; x < 16; x++)
     {
-        console.log(bot.getChar(-7, 7).link);
-        process.exit(0);
-    }, 1000);
+        var link = bot.getChar(x, 7).link;
+        if (typeof link !== "string") continue;
+
+        console.log(link);
+        break;
+    }
+    
+    process.exit(0);
 });

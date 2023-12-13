@@ -4,33 +4,38 @@ A bot that detects when the WOTD changes.
 
 const { Bot } = require("../lib");
 
-var bot = new Bot("wss://test.ourworldoftext.com/ws/?hide=1");
+var bot = new Bot("wss://ourworldoftext.com/ws/?hide=1");
 var wotd;
+
+function getwotd()
+{
+    for (var x = -14; x < 16; x++)
+    {
+        var link = bot.getChar(x, 7).link;
+        if (typeof link !== "string") continue;
+
+        return link;
+    }
+}
 
 function ontileupdate(e)
 {
     if (!e.tiles.hasOwnProperty("-1,0")) return;
 
-    var newwotd = bot.getChar(-7, 7).link;
-    if (typeof newwotd !== "string") return; // if the link was removed, don't do anything
-    if (newwotd === wotd) return;
+    var newwotd = getwotd();
+    if (wotd === newwotd) return;
 
+    console.log(newwotd);
     wotd = newwotd;
-    console.log(wotd); // output the new wotd
 }
 
-bot.on("connected", () =>
+bot.on("connected", async () =>
 {
-    bot.fetchTiles(-1, 0, -1, 0);
-    bot.setBoundary(-1, 0, -1, 0, -1, 0); // tile update boundary
+    bot.setBoundary(-1, 0, 0, 0, -1, 0); // tile update boundary
+    await bot.fetchTiles(-1, 0, 0, 0);
 
     bot.on("tileUpdate", ontileupdate);
 
-    // Bot.fetchTiles currently doesn't return a Promise, so waiting is the only option.
-    // This will be fixed soon™.
-    setTimeout(() =>
-    {
-        wotd = bot.getChar(-7, 7).link;
-        console.log(wotd);
-    }, 1000);
+    wotd = getwotd();
+    console.log(wotd);
 });

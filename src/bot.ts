@@ -346,20 +346,31 @@ export class Bot extends EventEmitter
 
     /**
      * Fetches the tiles in the given rectangle.
-     * @todo Make this return a promise.
      */
-    public fetchTiles(minX: number, minY: number, maxX: number, maxY: number): void
+    public fetchTiles(minX: number, minY: number, maxX: number, maxY: number): Promise<void>
     {
-        this.transmit({
-            kind: "fetch",
-            fetchRectangles: [
-                {
-                    minX,
-                    minY,
-                    maxX,
-                    maxY
-                }
-            ]
+        return new Promise((resolve, reject) =>
+        {
+            var onmsg = (data: any) =>
+            {
+                if (data.kind !== "fetch") return;
+
+                this.off("message", onmsg);
+                resolve();
+            }
+
+            this.on("message", onmsg);
+            this.transmit({
+                kind: "fetch",
+                fetchRectangles: [
+                    {
+                        minX,
+                        minY,
+                        maxX,
+                        maxY
+                    }
+                ]
+            });
         });
     }
 
