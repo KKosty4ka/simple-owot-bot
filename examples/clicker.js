@@ -18,10 +18,8 @@ function oncmd(e)
     // maybe make a rate limit?
 }
 
-(async () =>
+bot.on("connected", () =>
 {
-    await bot.waitForReady();
-
     bot.on("cmd", oncmd);
 
     setInterval(() =>
@@ -29,4 +27,4 @@ function oncmd(e)
         bot.writeText(-7, -1, `Clicks: ${clicks} `, 0x008000);
         bot.urlLink(-8, -1, "com:click");
     }, 100);
-})();
+});

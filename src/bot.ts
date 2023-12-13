@@ -5,6 +5,8 @@ import * as utils from "./utils";
 
 export declare interface Bot
 {
+    on(event: "connected", listener: () => void): this;
+    on(event: "disconnected", listener: () => void): this;
     on(event: "message", listener: (data: any) => void): this;
     on(event: "cmd", listener: (event: CmdEvent) => void): this;
     on(event: "chat", listener: (event: ChatEvent) => void): this;
@@ -30,10 +32,8 @@ export class Bot extends EventEmitter
      * @param token An Uvias token to use. (Optional)
      * @example <caption>Connect to the front page of OWOT as an anon.</caption>
      * var bot = new Bot("wss://ourworldoftext.com/ws/?hide=1");
-     * await bot.waitForReady();
      * @example <caption>Connect to /myworld with an account.</caption>
      * var bot = new Bot("wss://ourworldoftext.com/myworld/ws/?hide=1", "blahblahblah|4564786786");
-     * await bot.waitForReady();
      */
     public constructor(url: string, token?: string)
     {
@@ -46,6 +46,7 @@ export class Bot extends EventEmitter
         });
 
         this.ws.on("message", (data: string) => this.emit("message", JSON.parse(data)));
+        this.ws.on("close", () => this.emit("disconnected"));
         this.ws.on("open", () =>
         {
             this.transmit({
@@ -66,6 +67,8 @@ export class Bot extends EventEmitter
                     edits: this.writeBuffer.splice(0, 512)
                 });
             });
+
+            this.emit("connected");
         });
 
         // TODO: rewrite this awful mess
@@ -150,10 +153,8 @@ export class Bot extends EventEmitter
 
 
     /**
-     * Resolves when the bot is ready to be used.
-     * @example
-     * var bot = new Bot("wss://ourworldoftext.com/ws/");
-     * await bot.waitForReady();
+     * Deprecated, do not use.
+     * @deprecated
      */
     public waitForReady(): Promise<void>
     {

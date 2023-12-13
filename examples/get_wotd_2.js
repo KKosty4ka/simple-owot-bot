@@ -19,9 +19,8 @@ function ontileupdate(e)
     console.log(wotd); // output the new wotd
 }
 
-(async () =>
+bot.on("connected", () =>
 {
-    await bot.waitForReady();
     bot.fetchTiles(-1, 0, -1, 0);
     bot.setBoundary(-1, 0, -1, 0, -1, 0); // tile update boundary
 
@@ -34,4 +33,4 @@ function ontileupdate(e)
         wotd = bot.getChar(-7, 7).link;
         console.log(wotd);
     }, 1000);
-})();
+});

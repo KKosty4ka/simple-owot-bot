@@ -23,10 +23,8 @@ function onchat(e)
     bot.chat("ok", e.location, "newsticker", "#000000");
 }
 
-(async () =>
+bot.on("connected", () =>
 {
-    await bot.waitForReady();
-
     bot.on("chat", onchat);
 
     var text_pos = -news_width;
@@ -45,4 +43,4 @@ function onchat(e)
 
         bot.writeText(...news_location, subsect, news_color);
     }, 100);
-})();
+});
