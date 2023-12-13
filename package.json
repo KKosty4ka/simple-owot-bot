@@ -18,14 +18,14 @@
     "author": "KKosty4ka",
     "license": "GPL-3.0",
     "devDependencies": {
-        "@types/follow-redirects": "^1.14.1",
-        "@types/node": "^20.3.2",
-        "@types/qs": "^6.9.7",
-        "@types/ws": "^8.5.5",
-        "typescript": "^5.0.4"
+        "@types/follow-redirects": "^1.14.4",
+        "@types/node": "^20.10.4",
+        "@types/qs": "^6.9.10",
+        "@types/ws": "^8.5.10",
+        "typescript": "^5.3.3"
     },
     "dependencies": {
-        "follow-redirects": "^1.15.2",
-        "ws": "^8.13.0"
+        "follow-redirects": "^1.15.3",
+        "ws": "^8.15.1"
     }
 }
