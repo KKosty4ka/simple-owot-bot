@@ -21,7 +21,9 @@ export class Bot extends EventEmitter
 {
     private ws: WebSocket;
 
+    private nextPingId: number = 0;
     private nextEditId: number = 0;
+    private nextFetchId: number = 0;
     private writeBuffer: Array<Array<any>> = [];
     private waitingEdits: any = {};
     private tiles: any = {};
@@ -196,7 +198,7 @@ export class Bot extends EventEmitter
     {
         return new Promise((resolve, reject) =>
         {
-            var id = Math.random() * 1e16; // ideally this should be an incrementing value
+            var id = ++this.nextPingId;
             var startDate = Date.now();
 
             var onmsg = (data: any) =>
@@ -351,9 +353,11 @@ export class Bot extends EventEmitter
     {
         return new Promise((resolve, reject) =>
         {
+            var id = this.nextFetchId++;
+
             var onmsg = (data: any) =>
             {
-                if (data.kind !== "fetch") return;
+                if (data.kind !== "fetch" || data.request != id) return;
 
                 this.off("message", onmsg);
                 resolve();
@@ -362,6 +366,7 @@ export class Bot extends EventEmitter
             this.on("message", onmsg);
             this.transmit({
                 kind: "fetch",
+                request: id,
                 fetchRectangles: [
                     {
                         minX,
