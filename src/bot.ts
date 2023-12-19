@@ -7,6 +7,7 @@ export declare interface Bot
 {
     on(event: "connected", listener: () => void): this;
     on(event: "disconnected", listener: () => void): this;
+    on(event: "chathistory", listener: () => void): this;
     on(event: "message", listener: (data: any) => void): this;
     on(event: "cmd", listener: (event: CmdEvent) => void): this;
     on(event: "chat", listener: (event: ChatEvent) => void): this;
@@ -24,8 +25,12 @@ export class Bot extends EventEmitter
     private nextPingId: number = 0;
     private nextEditId: number = 0;
     private nextFetchId: number = 0;
-    private writeBuffer: Array<Array<any>> = [];
+
+    private writeBuffer: any[][] = [];
     private waitingEdits: any = {};
+
+    public pageChatHistory: ChatEvent[];
+    public globalChatHistory: ChatEvent[];
     private tiles: any = {};
 
     /**
@@ -52,7 +57,7 @@ export class Bot extends EventEmitter
         this.ws.on("open", () =>
         {
             this.transmit({
-                kind: "chathistory" // TODO: handle the chathistory response
+                kind: "chathistory"
             });
             
             this.transmit({
@@ -150,7 +155,14 @@ export class Bot extends EventEmitter
                     this.tiles[`${tileX},${tileY}`] = new Tile(tileX, tileY, data.tiles[coords]);
                 }
             }
-        })
+            else if (data.kind === "chathistory")
+            {
+                this.globalChatHistory = data.global_chat_prev;
+                this.pageChatHistory = data.page_chat_prev;
+
+                this.emit("chathistory");
+            }
+        });
     }
 
 
@@ -307,7 +319,7 @@ export class Bot extends EventEmitter
     /**
      * Creates a URL link on the canvas.
      */
-    public urlLink(x: number, y: number, url: string)
+    public urlLink(x: number, y: number, url: string): void
     {
         var [tileX, tileY, charX, charY] = utils.coordsCharToTile(x, y);
 
@@ -327,7 +339,7 @@ export class Bot extends EventEmitter
     /**
      * Creates a coord link on the canvas.
      */
-    public coordLink(x: number, y: number, link_tileX: number, link_tileY: number)
+    public coordLink(x: number, y: number, link_tileX: number, link_tileY: number): void
     {
         var [tileX, tileY, charX, charY] = utils.coordsCharToTile(x, y);
 
@@ -440,6 +452,9 @@ interface ChatEvent
     message: string;
     color: string;
     date: Date;
+
+    rankName: string;
+    rankColor: string;
 }
 
 interface TileUpdateEvent

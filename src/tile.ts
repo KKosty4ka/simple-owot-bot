@@ -73,8 +73,6 @@ export class Tile
                 }
             }
         }
-
-        // TODO: coord links and maybe more shit
     }
 
 
