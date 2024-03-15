@@ -236,7 +236,7 @@ export class Bot extends EventEmitter
      * @param nickname A nickname.
      * @param color The name color, for some weird reason as a string.
      * @example
-     * bot.chat("Hi everyone!", ChatLocation.Global, "", "#112233");
+     * bot.chat("Hi everyone!", "global", "", "#112233");
      */
     public chat(message: string, location: ChatLocation = ChatLocation.Page, nickname: string = "", color: string = "#000000"): void
     {
