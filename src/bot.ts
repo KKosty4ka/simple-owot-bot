@@ -394,7 +394,7 @@ export class Bot extends EventEmitter
     /**
      * Sets the tile update boundary.
      */
-    public setBoundary(minX: number, minY: number, maxX: number, maxY: number, centerX: number, centerY: number): void
+    public setBoundary(minX: number, minY: number, maxX: number, maxY: number): void
     {
         this.transmit({
             kind: "boundary",
@@ -402,8 +402,8 @@ export class Bot extends EventEmitter
             minY,
             maxX,
             maxY,
-            centerX,
-            centerY
+            centerX: Math.floor((maxX - minX) / 2 + minX),
+            centerY: Math.floor((maxY - minY) / 2 + minY)
         });
     }
 
