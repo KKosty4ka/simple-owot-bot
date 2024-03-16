@@ -1,8 +1,8 @@
-import { WebSocket } from "ws";
+import { sleep } from "./private_utils";
 import { EventEmitter } from "events";
 import { Tile, Char } from "./tile";
 import * as utils from "./utils";
-import { sleep } from "./private_utils";
+import { WebSocket } from "ws";
 
 export interface Bot extends EventEmitter
 {
@@ -70,7 +70,7 @@ export class Bot extends EventEmitter
             this.transmit({
                 kind: "chathistory"
             });
-            
+
             this.transmit({
                 kind: "cmd_opt"
             });
@@ -121,7 +121,7 @@ export class Bot extends EventEmitter
             {
                 var rej: number = data.rejected[i];
 
-                if (rej === 1 || rej === 4) delete this.waitingEdits[i]; 
+                if (rej === 1 || rej === 4) delete this.waitingEdits[i];
                 else this.writeBuffer.push(this.waitingEdits[i]);
             }
 
@@ -272,7 +272,7 @@ export class Bot extends EventEmitter
     /**
      * Send a chat message.
      * @param message The text of the message.
-     * @param location Where to send the message.    
+     * @param location Where to send the message.
      * @param nickname A nickname.
      * @param color The name color, for some weird reason as a string.
      * @example
@@ -326,7 +326,7 @@ export class Bot extends EventEmitter
     public writeChar(x: number, y: number, char: string, color: number = 0x000000, bgcolor: number = -1): void
     {
         var edit = [Math.floor(y / 8), Math.floor(x / 16), y - Math.floor(y / 8) * 8, x - Math.floor(x / 16) * 16, Date.now(), char, ++this.nextEditId, color, bgcolor];
-        
+
         this.writeBuffer.push(edit);
         this.waitingEdits[edit[6].toString()] = edit;
     }
@@ -342,7 +342,7 @@ export class Bot extends EventEmitter
         for (var i = 0; i < stext.length; i++)
         {
             var char = stext[i];
-            
+
             if (char === "\n")
             {
                 x = ix;
@@ -459,6 +459,7 @@ export class Bot extends EventEmitter
 
         return tile.getChar(charX, charY);
     }
+
 
     /**
      * Quickly clear an area.

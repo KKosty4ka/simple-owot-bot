@@ -2,28 +2,31 @@ import { advancedSplit } from "./utils";
 
 const b64table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-function unshiftProtection(value: number): number | null
+function unshiftProtection(value: number): Protection
 {
-    if (value === 0) return null;
-    else return value - 1;
+    // sometimes i hate typescript
+    if (value === 1) return 0;
+    else if (value === 2) return 1;
+    else if (value === 3) return 2;
+    else return null;
 }
 
-function decodeProtection(tile: any): Array<number | null>
+function decodeProtection(tile: any): Protection[]
 {
     var output = new Array(128).fill(null);
     if (!tile.properties.char) return output;
-    
+
     var data = tile.properties.char.substring(1);
-    
+
     for (var i = 0; i < data.length; i++)
     {
         var byte = b64table.indexOf(data[i]);
-        
+
         output[i * 3] = unshiftProtection(byte >> 4 & 3);
         output[i * 3 + 1] = unshiftProtection(byte >> 2 & 3);
         output[i * 3 + 2] = unshiftProtection(byte & 3);
     }
-    
+
     return output;
 }
 
@@ -31,12 +34,12 @@ export class Tile
 {
     private x: number;
     private y: number;
-    private content: Array<string>;
-    private color: Array<number>;
-    private bcolor: Array<number>;
-    private writability: number | null;
-    private protections: Array<number | null>;
-    private links: Array<string | Array<number> | null> = new Array(128).fill(null);
+    private content: string[];
+    private color: number[];
+    private bcolor: number[];
+    private writability: Protection;
+    private protections: Protection[];
+    private links: Link[] = new Array(128).fill(null);
 
     /**
      * Creates a new Tile from tile data.
@@ -92,7 +95,7 @@ export class Tile
         return this.y;
     }
 
-    
+
     /**
      * Gets a character.
      * @param x charX inside the tile.
@@ -123,6 +126,9 @@ export interface Char
     char: string,
     color: number,
     bgColor: number,
-    protection: number | null,
-    link: string | Array<number> | null
+    protection: Protection,
+    link: Link
 }
+
+export type Link = string | number[] | null;
+export type Protection = null | 0 | 1 | 2;

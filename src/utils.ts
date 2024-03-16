@@ -66,7 +66,7 @@ export function uviasLogin(loginName: string, password: string, tokenfile?: stri
             if (tokenfile) await fsp.writeFile(tokenfile, token[1], { encoding: "utf-8" });
             resolve(token[1]);
         });
-        
+
         req.write(loginData);
         req.end();
     });
@@ -77,7 +77,7 @@ export function uviasLogin(loginName: string, password: string, tokenfile?: stri
  * @example
  * var [x, y] = coordsTileToChar(tileX, tileY, charX, charY);
  */
-export function coordsTileToChar(tileX: number, tileY: number, charX: number, charY: number): Array<number>
+export function coordsTileToChar(tileX: number, tileY: number, charX: number, charY: number): number[]
 {
     return [tileX * 16 + charX, tileY * 8 + charY];
 }
@@ -87,13 +87,13 @@ export function coordsTileToChar(tileX: number, tileY: number, charX: number, ch
  * @example
  * var [tileX, tileY, charX, charY] = coordsCharToTile(x, y);
  */
-export function coordsCharToTile(x: number, y: number): Array<number>
+export function coordsCharToTile(x: number, y: number): number[]
 {
     return [Math.floor(x / 16), Math.floor(y / 8), x - Math.floor(x / 16) * 16, y - Math.floor(y / 8) * 8];
 }
 
 // 100% stolen from OWOT source code
-export function advancedSplit(str: string | Array<string>, noSurrog?: boolean, noComb?: boolean, norm?: boolean)
+export function advancedSplit(str: string | string[], noSurrog?: boolean, noComb?: boolean, norm?: boolean)
 {
     if(str && str.constructor == Array) return str.slice(0);
     var chars = [];
