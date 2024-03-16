@@ -3,16 +3,24 @@ import { EventEmitter } from "events";
 import { Tile, Char } from "./tile";
 import * as utils from "./utils";
 
-export declare interface Bot
+export interface Bot extends EventEmitter
 {
     on(event: "connected", listener: () => void): this;
     on(event: "disconnected", listener: () => void): this;
     on(event: "chathistory", listener: () => void): this;
-    on(event: "message", listener: (data: any) => void): this;
     on(event: "cmd", listener: (event: CmdEvent) => void): this;
     on(event: "chat", listener: (event: ChatEvent) => void): this;
     on(event: "writeBufferEmpty", listener: () => void): this;
     on(event: "tileUpdate", listener: (event: TileUpdateEvent) => void): this;
+
+    on(event: "message", listener: (data: any) => void): this;
+    on(event: "message_cmd", listener: (data: any) => void): this;
+    on(event: "message_chat", listener: (data: any) => void): this;
+    on(event: "message_write", listener: (data: any) => void): this;
+    on(event: "message_tileUpdate", listener: (data: any) => void): this;
+    on(event: "message_fetch", listener: (data: any) => void): this;
+    on(event: "message_chathistory", listener: (data: any) => void): this;
+    on(event: "message_ping", listener: (data: any) => void): this;
 }
 
 /**
@@ -70,90 +78,94 @@ export class Bot extends EventEmitter
             this.emit("connected");
         });
 
-        // TODO: rewrite this awful mess
-        this.on("message", (data: any) =>
+        // TODO: still a mess :\
+        this.on("message", (data: any) => this.emit("message_" + data.kind, data));
+
+        this.on("message_cmd", (data: any) =>
         {
-            if (data.kind === "cmd")
+            this.emit("cmd", {
+                data: data.data,
+                senderChannel: data.sender,
+
+                registered: data.username ? true : false,
+                username: data.username ?? null,
+                uviasId: data.id ?? null,
+            });
+        });
+
+        this.on("message_chat", (data: any) =>
+        {
+            this.emit("chat", {
+                id: data.id,
+                nickname: data.nickname,
+
+                realUsername: data.realUsername,
+                registered: data.registered,
+                op: data.op,
+                admin: data.admin,
+                staff: data.staff,
+
+                location: data.location,
+                message: data.message,
+                color: data.color,
+                date: data.date
+            });
+        });
+
+        this.on("message_write", (data: any) =>
+        {
+            for (var j = 0; j < data.accepted.length; j++) delete this.waitingEdits[data.accepted[j]];
+
+            for (var i in data.rejected)
             {
-                this.emit("cmd", {
-                    data: data.data,
-                    senderChannel: data.sender,
+                var rej: number = data.rejected[i];
 
-                    registered: data.username ? true : false,
-                    username: data.username ?? null,
-                    uviasId: data.id ?? null,
-                });
+                if (rej === 1 || rej === 4) delete this.waitingEdits[i]; 
+                else this.writeBuffer.push(this.waitingEdits[i]);
             }
-            else if (data.kind === "chat")
+
+            if (Object.keys(this.waitingEdits).length === 0 && this.writeBuffer.length === 0) this.emit("writeBufferEmpty");
+        });
+
+        this.on("message_tileUpdate", (data: any) =>
+        {
+            var evtTiles: any = {};
+
+            for (var coords in data.tiles)
             {
-                this.emit("chat", {
-                    id: data.id,
-                    nickname: data.nickname,
+                var nums = coords.split(",");
+                var tileX = Number.parseInt(nums[1]);
+                var tileY = Number.parseInt(nums[0]);
 
-                    realUsername: data.realUsername,
-                    registered: data.registered,
-                    op: data.op,
-                    admin: data.admin,
-                    staff: data.staff,
-
-                    location: data.location,
-                    message: data.message,
-                    color: data.color,
-                    date: data.date
-                });
+                var tile = new Tile(tileX, tileY, data.tiles[coords]);
+                this.tiles[`${tileX},${tileY}`] = tile;
+                evtTiles[`${tileX},${tileY}`] = tile;
             }
-            else if (data.kind === "write")
+
+            this.emit("tileUpdate", {
+                channel: data.channel,
+                tiles: evtTiles
+            });
+        });
+
+        this.on("message_fetch", (data: any) =>
+        {
+            for (var coords in data.tiles)
             {
-                for (var j = 0; j < data.accepted.length; j++) delete this.waitingEdits[data.accepted[j]];
+                var nums = coords.split(",");
+                var tileX = Number.parseInt(nums[1]);
+                var tileY = Number.parseInt(nums[0]);
 
-                for (var i in data.rejected)
-                {
-                    var rej: number = data.rejected[i];
-
-                    if (rej === 1 || rej === 4) delete this.waitingEdits[i]; 
-                    else this.writeBuffer.push(this.waitingEdits[i]);
-                }
-
-                if (Object.keys(this.waitingEdits).length === 0 && this.writeBuffer.length === 0) this.emit("writeBufferEmpty");
+                this.tiles[`${tileX},${tileY}`] = new Tile(tileX, tileY, data.tiles[coords]);
             }
-            else if (data.kind === "tileUpdate")
-            {
-                var evtTiles: any = {};
+        });
 
-                for (var coords in data.tiles)
-                {
-                    var nums = coords.split(",");
-                    var tileX = Number.parseInt(nums[1]);
-                    var tileY = Number.parseInt(nums[0]);
+        this.on("message_chathistory", (data: any) =>
+        {
+            this.globalChatHistory = data.global_chat_prev;
+            this.pageChatHistory = data.page_chat_prev;
 
-                    var tile = new Tile(tileX, tileY, data.tiles[coords]);
-                    this.tiles[`${tileX},${tileY}`] = tile;
-                    evtTiles[`${tileX},${tileY}`] = tile;
-                }
-
-                this.emit("tileUpdate", {
-                    channel: data.channel,
-                    tiles: evtTiles
-                });
-            }
-            else if (data.kind === "fetch")
-            {
-                for (var coords in data.tiles)
-                {
-                    var nums = coords.split(",");
-                    var tileX = Number.parseInt(nums[1]);
-                    var tileY = Number.parseInt(nums[0]);
-
-                    this.tiles[`${tileX},${tileY}`] = new Tile(tileX, tileY, data.tiles[coords]);
-                }
-            }
-            else if (data.kind === "chathistory")
-            {
-                this.globalChatHistory = data.global_chat_prev;
-                this.pageChatHistory = data.page_chat_prev;
-
-                this.emit("chathistory");
-            }
+            this.emit("chathistory");
         });
     }
 
@@ -188,7 +200,7 @@ export class Bot extends EventEmitter
     {
         this.waitingEdits = {};
         this.writeBuffer = [];
-        
+
         this.emit("writeBufferEmpty");
     }
 
@@ -242,13 +254,13 @@ export class Bot extends EventEmitter
 
             var onmsg = (data: any) =>
             {
-                if (data.kind !== "ping" || data.id != id) return;
+                if (data.id != id) return;
 
-                this.off("message", onmsg);
+                this.off("message_ping", onmsg);
                 resolve(Date.now() - startDate);
             }
 
-            this.on("message", onmsg);
+            this.on("message_ping", onmsg);
             this.transmit({
                 kind: "ping",
                 id
@@ -396,13 +408,13 @@ export class Bot extends EventEmitter
 
             var onmsg = (data: any) =>
             {
-                if (data.kind !== "fetch" || data.request != id) return;
+                if (data.request != id) return;
 
-                this.off("message", onmsg);
+                this.off("message_fetch", onmsg);
                 resolve();
             }
 
-            this.on("message", onmsg);
+            this.on("message_fetch", onmsg);
             this.transmit({
                 kind: "fetch",
                 request: id,
