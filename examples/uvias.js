@@ -6,5 +6,5 @@ const { utils } = require("../lib");
 
 (async () =>
 {
-    console.log(await utils.uviasLogin("username", "password"));
+    console.log(await utils.uviasLogin("username", "password", "token.txt"));
 })();
