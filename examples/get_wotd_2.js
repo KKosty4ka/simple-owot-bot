@@ -31,7 +31,7 @@ function ontileupdate(e)
 
 bot.on("connected", async () =>
 {
-    bot.setBoundary(-1, 0, 0, 0, -1, 0); // tile update boundary
+    bot.setBoundary(-1, 0, 0, 0); // tile update boundary
     await bot.fetchTiles(-1, 0, 0, 0);
 
     bot.on("tileUpdate", ontileupdate);
