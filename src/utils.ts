@@ -1,48 +1,69 @@
 import { IncomingMessage } from "http";
-import * as https from "https";
+import * as fsp from "fs/promises";
 import * as qs from "querystring";
+import * as https from "https";
 
-/**
- * Log in to Uvias.
- * @returns A token.
- * @todo Save the token and don't log in again.
- */
-export function uviasLogin(loginName: string, password: string)
+function checkToken(token: string): Promise<boolean>
 {
     return new Promise((resolve, reject) =>
     {
+        var req = https.request({
+            method: "GET",
+            hostname: "ourworldoftext.com",
+            path: "/accounts/member_autocomplete/",
+            headers: {
+                "Cookie": "token=" + token
+            }
+        }, (res: IncomingMessage) =>
+        {
+            resolve(res.statusCode !== 403 && res.statusCode !== 500);
+        });
+
+        req.on("error", () => resolve(false));
+        req.end();
+    });
+}
+
+/**
+ * Log in to Uvias.
+ * @param tokenfile Path to a file where the token will be cached.
+ * @returns A token.
+ */
+export function uviasLogin(loginName: string, password: string, tokenfile?: string): Promise<string>
+{
+    // based on fp's code https://pastebin.com/NgtvH29U
+    return new Promise(async (resolve, reject) =>
+    {
+        if (tokenfile)
+        {
+            try
+            {
+                var token = await fsp.readFile(tokenfile, { encoding: "utf-8" });
+                if (await checkToken(token)) return resolve(token);
+            }
+            catch { }
+        }
+
         var loginData = qs.stringify({
             service: "uvias",
             loginname: loginName,
             pass: password,
             persistent: "on"
-        })
+        });
 
         var req = https.request({
             method: "POST",
             hostname: "uvias.com",
-            path: "/api/auth/uvias",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Content-Length": Buffer.byteLength(loginData),
-                "Host": "uvias.com"
-            }
-        }, (res: IncomingMessage) =>
+            path: "/api/auth/uvias"
+        }, async (res: IncomingMessage) =>
         {
             var cookie = res.headers["set-cookie"];
-            if (!cookie)
-            {
-                reject("no cookie");
-                return;
-            }
+            if (!cookie) return reject("no cookie");
 
             var token = /uviastoken=(.+?);/.exec(cookie[0]);
-            if (!token)
-            {
-                reject("no token");
-                return;
-            }
+            if (!token) return reject("no token");
 
+            if (tokenfile) await fsp.writeFile(tokenfile, token[1], { encoding: "utf-8" });
             resolve(token[1]);
         });
         
