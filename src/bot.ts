@@ -6,21 +6,88 @@ import { WebSocket } from "ws";
 
 export interface Bot extends EventEmitter
 {
+    /**
+     * Fired when the bot connects to the server.
+     */
     on(event: "connected", listener: () => void): this;
+
+    /**
+     * Fired when the bot disconnects from the server.
+     */
     on(event: "disconnected", listener: () => void): this;
+
+    /**
+     * Fired when chat history becomes avaliable.
+     */
     on(event: "chathistory", listener: () => void): this;
+
+    /**
+     * Fired when a cmd message is received.
+     */
     on(event: "cmd", listener: (event: CmdEvent) => void): this;
+
+    /**
+     * Fired when a chat message is received.
+     */
     on(event: "chat", listener: (event: ChatEvent) => void): this;
+
+    /**
+     * Fired when the write buffer becomes empty.
+     */
     on(event: "writeBufferEmpty", listener: () => void): this;
+
+    /**
+     * Fired when a tile update is received.
+     */
     on(event: "tileUpdate", listener: (event: TileUpdateEvent) => void): this;
 
+
+    /**
+     * Fired when any packet is received.
+     * @private
+     */
     on(event: "message", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a cmd packet is received.
+     * @private
+     */
     on(event: "message_cmd", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a chat packet is received.
+     * @private
+     */
     on(event: "message_chat", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a write packet is received.
+     * @private
+     */
     on(event: "message_write", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a tileUpdate packet is received.
+     * @private
+     */
     on(event: "message_tileUpdate", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a fetch packet is received.
+     * @private
+     */
     on(event: "message_fetch", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a chathistory packet is received.
+     * @private
+     */
     on(event: "message_chathistory", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a ping packet is received.
+     * @private
+     */
     on(event: "message_ping", listener: (data: any) => void): this;
 }
 
