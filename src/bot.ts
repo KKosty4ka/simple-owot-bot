@@ -26,6 +26,7 @@ export class Bot extends EventEmitter
     private nextEditId: number = 0;
     private nextFetchId: number = 0;
 
+    private flushInterval: NodeJS.Timeout;
     private writeBuffer: any[][] = [];
     private waitingEdits: any = {};
 
@@ -37,12 +38,13 @@ export class Bot extends EventEmitter
      * Creates a new bot.
      * @param url The url to connect to. Please use ?hide=1 to prevent inflating the user count.
      * @param token An Uvias token to use. (Optional)
+     * @param flushInterval The initial flush interval. May be changed later with {@link setFlushInterval}. Default value is 0.
      * @example <caption>Connect to the front page of OWOT as an anon.</caption>
      * var bot = new Bot("wss://ourworldoftext.com/ws/?hide=1");
      * @example <caption>Connect to /myworld with an account.</caption>
      * var bot = new Bot("wss://ourworldoftext.com/myworld/ws/?hide=1", "blahblahblah|4564786786");
      */
-    public constructor(url: string, token?: string)
+    public constructor(url: string, token?: string, flushInterval: number = 0)
     {
         super();
 
@@ -64,17 +66,7 @@ export class Bot extends EventEmitter
                 kind: "cmd_opt"
             });
 
-            // flushing writes
-            setInterval(() =>
-            {
-                if (!this.writeBuffer.length) return;
-
-                this.transmit({
-                    kind: "write",
-                    edits: this.writeBuffer.splice(0, 512)
-                });
-            });
-
+            this.setFlushInterval(flushInterval);
             this.emit("connected");
         });
 
@@ -163,6 +155,41 @@ export class Bot extends EventEmitter
                 this.emit("chathistory");
             }
         });
+    }
+
+    /**
+     * Flush all pending writes from the write buffer.
+     */
+    public flushWrites(): void
+    {
+        if (!this.writeBuffer.length) return;
+
+        this.transmit({
+            kind: "write",
+            edits: this.writeBuffer.splice(0, 512)
+        });
+    }
+
+    /**
+     * Set the flush interval.
+     * @param interval The interval, in ms.
+     */
+    public setFlushInterval(interval: number): void
+    {
+        clearInterval(this.flushInterval);
+        this.flushInterval = setInterval(this.flushWrites.bind(this), interval);
+    }
+
+    /**
+     * Clears all pending writes.
+     * @fires Bot#writeBufferEmpty
+     */
+    public clearWriteBuffer(): void
+    {
+        this.waitingEdits = {};
+        this.writeBuffer = [];
+        
+        this.emit("writeBufferEmpty");
     }
 
 
