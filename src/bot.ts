@@ -2,6 +2,7 @@ import { WebSocket } from "ws";
 import { EventEmitter } from "events";
 import { Tile, Char } from "./tile";
 import * as utils from "./utils";
+import { sleep } from "./private_utils";
 
 export interface Bot extends EventEmitter
 {
@@ -458,6 +459,149 @@ export class Bot extends EventEmitter
 
         return tile.getChar(charX, charY);
     }
+
+    /**
+     * Quickly clear an area.
+     * Requires "Erase areas rapidly" permission.
+     */
+    public async clearArea(x: number, y: number, width: number, height: number): Promise<void>
+    {
+        // mostly stolen from owot source code
+        var [tileX1, tileY1, charX1, charY1] = utils.coordsCharToTile(x, y);
+        var [tileX2, tileY2, charX2, charY2] = utils.coordsCharToTile(x + width, y + height);
+
+        var tx1 = tileX1;
+        var ty1 = tileY1;
+        var tx2 = tileX2;
+        var ty2 = tileY2;
+
+        if (charX1) tx1++;
+        if (charY1) ty1++;
+        if (charX2 < 16 - 1) tx2--;
+        if (charY2 < 8 - 1) ty2--;
+
+        for (var dy = tileY1; dy <= tileY2; dy++)
+        {
+            for (var dx = tileX1; dx <= tileX2; dx++)
+            {
+                var leftEdge = dx == tileX1 && charX1 > 0;
+                var topEdge = dy == tileY1 && charY1 > 0;
+                var rightEdge = dx == tileX2 && charX2 < (16 - 1);
+                var bottomEdge = dy == tileY2 && charY2 < (8 - 1);
+                var cx1 = 0;
+                var cy1 = 0;
+                var cx2 = 16 - 1;
+                var cy2 = 8 - 1;
+
+                if (leftEdge || topEdge || rightEdge || bottomEdge)
+                {
+                    if (leftEdge) cx1 = charX1;
+                    if (topEdge) cy1 = charY1;
+                    if (rightEdge) cx2 = charX2;
+                    if (bottomEdge) cy2 = charY2;
+
+                    this.transmit({
+                        kind: "clear_tile",
+
+                        tileX: dx,
+                        tileY: dy,
+
+                        charX: cx1,
+                        charY: cy1,
+
+                        charWidth: cx2 - cx1 + 1,
+                        charHeight: cy2 - cy1 + 1
+                    });
+                }
+                else
+                {
+                    this.transmit({
+                        kind: "clear_tile",
+
+                        tileX: dx,
+                        tileY: dy
+                    });
+                }
+
+                await sleep(1000 / 80);
+            }
+        }
+    }
+
+    /**
+     * Protect an area.
+     */
+    public async protect(x: number, y: number, width: number, height: number, protection: Protection): Promise<void>
+    {
+        // mostly stolen from owot source code
+        var [tileX1, tileY1, charX1, charY1] = utils.coordsCharToTile(x, y);
+        var [tileX2, tileY2, charX2, charY2] = utils.coordsCharToTile(x + width, y + height);
+
+        var tx1 = tileX1;
+        var ty1 = tileY1;
+        var tx2 = tileX2;
+        var ty2 = tileY2;
+
+        if (charX1) tx1++;
+        if (charY1) ty1++;
+        if (charX2 < 16 - 1) tx2--;
+        if (charY2 < 8 - 1) ty2--;
+
+        for (var dy = tileY1; dy <= tileY2; dy++)
+        {
+            for (var dx = tileX1; dx <= tileX2; dx++)
+            {
+                var leftEdge = dx == tileX1 && charX1 > 0;
+                var topEdge = dy == tileY1 && charY1 > 0;
+                var rightEdge = dx == tileX2 && charX2 < (16 - 1);
+                var bottomEdge = dy == tileY2 && charY2 < (8 - 1);
+                var cx1 = 0;
+                var cy1 = 0;
+                var cx2 = 16 - 1;
+                var cy2 = 8 - 1;
+
+                if (leftEdge || topEdge || rightEdge || bottomEdge)
+                {
+                    if (leftEdge) cx1 = charX1;
+                    if (topEdge) cy1 = charY1;
+                    if (rightEdge) cx2 = charX2;
+                    if (bottomEdge) cy2 = charY2;
+
+                    this.transmit({
+                        kind: "protect",
+                        action: protection === Protection.Default ? "unprotect" : "protect",
+                        data: {
+                            tileX: dx,
+                            tileY: dy,
+
+                            charX: cx1,
+                            charY: cy1,
+
+                            charWidth: cx2 - cx1 + 1,
+                            charHeight: cy2 - cy1 + 1,
+
+                            precise: true,
+                            type: protection === Protection.Default ? undefined : protection
+                        }
+                    });
+                }
+                else
+                {
+                    this.transmit({
+                        kind: "protect",
+                        action: protection === Protection.Default ? "unprotect" : "protect",
+                        data: {
+                            tileX: dx,
+                            tileY: dy,
+                            type: protection === Protection.Default ? undefined : protection
+                        }
+                    });
+                }
+
+                await sleep(1000 / 80);
+            }
+        }
+    }
 }
 
 interface CmdEvent
@@ -474,6 +618,14 @@ enum ChatLocation
 {
     Page = "page",
     Global = "global"
+}
+
+enum Protection
+{
+    Default = "default",
+    Public = "public",
+    MemberOnly = "member-only",
+    OwnerOnly = "owner-only"
 }
 
 interface ChatEvent
