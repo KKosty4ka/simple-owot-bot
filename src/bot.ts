@@ -44,49 +44,49 @@ export interface Bot extends EventEmitter
 
     /**
      * Fired when any packet is received.
-     * @private
+     * @internal
      */
     on(event: "message", listener: (data: any) => void): this;
 
     /**
      * Fired when a cmd packet is received.
-     * @private
+     * @internal
      */
     on(event: "message_cmd", listener: (data: any) => void): this;
 
     /**
      * Fired when a chat packet is received.
-     * @private
+     * @internal
      */
     on(event: "message_chat", listener: (data: any) => void): this;
 
     /**
      * Fired when a write packet is received.
-     * @private
+     * @internal
      */
     on(event: "message_write", listener: (data: any) => void): this;
 
     /**
      * Fired when a tileUpdate packet is received.
-     * @private
+     * @internal
      */
     on(event: "message_tileUpdate", listener: (data: any) => void): this;
 
     /**
      * Fired when a fetch packet is received.
-     * @private
+     * @internal
      */
     on(event: "message_fetch", listener: (data: any) => void): this;
 
     /**
      * Fired when a chathistory packet is received.
-     * @private
+     * @internal
      */
     on(event: "message_chathistory", listener: (data: any) => void): this;
 
     /**
      * Fired when a ping packet is received.
-     * @private
+     * @internal
      */
     on(event: "message_ping", listener: (data: any) => void): this;
 }
@@ -112,13 +112,24 @@ export class Bot extends EventEmitter
 
     /**
      * Creates a new bot.
-     * @param url The url to connect to. Please use ?hide=1 to prevent inflating the user count.
-     * @param token An Uvias token to use. (Optional)
-     * @param flushInterval The initial flush interval. May be changed later with {@link setFlushInterval}. Default value is 0.
-     * @example <caption>Connect to the front page of OWOT as an anon.</caption>
+     * @param url - The url to connect to. Please use ?hide=1 to prevent inflating the user count.
+     * @param token - An Uvias token to use. (Optional)
+     * @param flushInterval -s The initial flush interval. May be changed later with {@link setFlushInterval}. Default value is 0.
+     * @example
+     * Connect to the front page of OWOT as an anon.
+     * ```js
      * var bot = new Bot("wss://ourworldoftext.com/ws/?hide=1");
-     * @example <caption>Connect to /myworld with an account.</caption>
+     * ```
+     * @example
+     * Connect to /myworld with an account.
+     * ```js
      * var bot = new Bot("wss://ourworldoftext.com/myworld/ws/?hide=1", "blahblahblah|4564786786");
+     * ```
+     * @example
+     * Connect to /myworld with an account and set a flush interval of 1 second.
+     * ```js
+     * var bot = new Bot("wss://ourworldoftext.com/myworld/ws/?hide=1", "blahblahblah|4564786786", 1000);
+     * ```
      */
     public constructor(url: string, token?: string, flushInterval: number = 0)
     {
@@ -176,7 +187,10 @@ export class Bot extends EventEmitter
                 location: data.location,
                 message: data.message,
                 color: data.color,
-                date: data.date
+                date: data.date,
+
+                rankName: data.rankName,
+                rankColor: data.rankColor
             });
         });
 
@@ -252,7 +266,12 @@ export class Bot extends EventEmitter
 
     /**
      * Set the flush interval.
-     * @param interval The interval, in ms.
+     * @param interval - The interval, in ms.
+     * @example
+     * Set a flush interval of 5 seconds.
+     * ```js
+     * bot.setFlushInterval(5000);
+     * ```
      */
     public setFlushInterval(interval: number): void
     {
@@ -261,8 +280,7 @@ export class Bot extends EventEmitter
     }
 
     /**
-     * Clears all pending writes.
-     * @fires Bot#writeBufferEmpty
+     * Clears all pending writes and fires the "writeBufferEmpty" event
      */
     public clearWriteBuffer(): void
     {
@@ -275,7 +293,7 @@ export class Bot extends EventEmitter
 
     /**
      * Deprecated, do not use.
-     * @deprecated
+     * @deprecated Instead use the "connected" event.
      */
     public waitForReady(): Promise<void>
     {
@@ -298,7 +316,8 @@ export class Bot extends EventEmitter
 
     /**
      * Sends JSON data to the server.
-     * @param json A JSON object to send.
+     * @param json - A JSON object to send.
+     * @internal
      */
     private transmit(json: any): void
     {
@@ -310,8 +329,10 @@ export class Bot extends EventEmitter
      * Check the connection speed.
      * @returns Connection delay, in milliseconds.
      * @example
+     * ```js
      * var ping = await bot.ping();
-     * bot.chat(`My ping is: ${ping}`);
+     * bot.chat(`My ping is ${ping} ms.`);
+     * ```
      */
     public ping(): Promise<number>
     {
@@ -338,12 +359,14 @@ export class Bot extends EventEmitter
 
     /**
      * Send a chat message.
-     * @param message The text of the message.
-     * @param location Where to send the message.
-     * @param nickname A nickname.
-     * @param color The name color, for some weird reason as a string.
+     * @param message - The text of the message.
+     * @param location - Where to send the message. {@link ChatLocation.Page} by default.
+     * @param nickname - A nickname. Empty by default.
+     * @param color - The name color, for some weird reason as a string. Black by default.
      * @example
+     * ```js
      * bot.chat("Hi everyone!", ChatLocation.Global, "", "#112233");
+     * ```
      */
     public chat(message: string, location: ChatLocation = ChatLocation.Page, nickname: string = "", color: string = "#000000"): void
     {
@@ -359,6 +382,12 @@ export class Bot extends EventEmitter
 
     /**
      * Moves the bot's guest cursor and shows it if it's hidden.
+     * @param x - The X coordinate.
+     * @param y - The X coordinate.
+     * @example
+     * ```js
+     * bot.moveCursor(123, 456);
+     * ```
      */
     public moveCursor(x: number, y: number): void
     {
@@ -377,6 +406,10 @@ export class Bot extends EventEmitter
 
     /**
      * Hides the bot's guest cursor.
+     * @example
+     * ```js
+     * bot.hideCursor();
+     * ```
      */
     public hideCursor(): void
     {
@@ -389,6 +422,21 @@ export class Bot extends EventEmitter
 
     /**
      * Writes a character on the canvas.
+     * @param x - The X coordinate.
+     * @param y - The Y coordinate.
+     * @param char - The character. Only one at a time, for multiple see {@link writeText}
+     * @param color - The color as an 0xRRGGBB integer. Black by default.
+     * @param bgcolor - The background color as an 0xRRGGBB integer, or -1 for none (default).
+     * @example
+     * Write a green "E" at 0, 0
+     * ```js
+     * bot.writeChar(0, 0, "E", 0x008000);
+     * ```
+     * @example
+     * Write a blue "c" on red background at 1, 2
+     * ```js
+     * bot.writeChar(1, 2, "c", 0x0000ff, 0xff0000);
+     * ```
      */
     public writeChar(x: number, y: number, char: string, color: number = 0x000000, bgcolor: number = -1): void
     {
@@ -399,7 +447,22 @@ export class Bot extends EventEmitter
     }
 
     /**
-     * Writes text on the canvas.
+     * Write a string on the canvas.
+     * @param x - The X coordinate.
+     * @param y - The Y coordinate.
+     * @param text - The string.
+     * @param color - The color as an 0xRRGGBB integer. Black by default.
+     * @param bgcolor - The background color as an 0xRRGGBB integer, or -1 for none (default).
+     * @example
+     * Write a green "hi!" at 0, 0
+     * ```js
+     * bot.writeText(0, 0, "hi!", 0x008000);
+     * ```
+     * @example
+     * Write a blue "fuck" on red background at 1, 2
+     * ```js
+     * bot.writeText(1, 2, "fuck", 0x0000ff, 0xff0000);
+     * ```
      */
     public writeText(x: number, y: number, text: string, color: number = 0x000000, bgcolor: number = -1): void
     {
@@ -425,6 +488,19 @@ export class Bot extends EventEmitter
 
     /**
      * Creates a URL link on the canvas.
+     * @param x - The X coordinate.
+     * @param y - The Y coordinate.
+     * @param url - The URL.
+     * @example
+     * Create a link to /main at 0, 0
+     * ```js
+     * bot.urlLink(0, 0, "/main");
+     * ```
+     * @example
+     * Create a link to youtube at 1, 2
+     * ```js
+     * bot.urlLink(1, 2, "https://youtube.com/");
+     * ```
      */
     public urlLink(x: number, y: number, url: string): void
     {
@@ -445,8 +521,20 @@ export class Bot extends EventEmitter
 
     /**
      * Creates a coord link on the canvas.
+     * @param x - The X coordinate.
+     * @param y - The Y coordinate.
+     * @param linkX - X of the target location.
+     * @param linkY - Y of the target location.
+     * @remarks
+     * linkX and linkY are in coordinates, not chars.
+     * One coordinate = 4 tiles.
+     * @example
+     * Link to 123, 456 at 0, 0.
+     * ```js
+     * bot.coordLink(0, 0, 123, 456);
+     * ```
      */
-    public coordLink(x: number, y: number, link_tileX: number, link_tileY: number): void
+    public coordLink(x: number, y: number, linkX: number, linkY: number): void
     {
         var [tileX, tileY, charX, charY] = utils.coordsCharToTile(x, y);
 
@@ -457,8 +545,8 @@ export class Bot extends EventEmitter
                 tileX,
                 charY,
                 charX,
-                link_tileX,
-                link_tileY
+                link_tileX: linkX,
+                link_tileY: linkY
             },
             type: "coord"
         });
@@ -466,12 +554,28 @@ export class Bot extends EventEmitter
 
 
     /**
-     * Fetches the tiles in the given rectangle.
+     * Fetches the tiles in a given rectangle.
+     * @param minX - Left X coordinate.
+     * @param minY - Top Y coordinate.
+     * @param maxX - Right X coordinate.
+     * @param maxY - Bottom Y coordinate.
+     * @remarks
+     * The coordinates are in tiles, not chars.
+     * The returned promise resolves once the tiles have been received.
+     * You can fetch up to 2500 tiles at a time.
+     * @example
+     * Fetch tiles from -5, -5 to 5, 5.
+     * ```js
+     * bot.fetchTiles(-5, -5, 5, 5);
+     * // The tiles may now be used, for example with Bot.getChar(x, y).
+     * ```
      */
     public fetchTiles(minX: number, minY: number, maxX: number, maxY: number): Promise<void>
     {
         return new Promise((resolve, reject) =>
         {
+            if ((maxX - minX) * (maxY - minY) > 2500) return reject("too many tiles fetched at once, 2500 is max");
+
             var id = this.nextFetchId++;
 
             var onmsg = (data: any) =>
@@ -500,6 +604,20 @@ export class Bot extends EventEmitter
 
     /**
      * Sets the tile update boundary.
+     * Tile updated outside this boundary will not be received.
+     * @param minX - Left X coordinate.
+     * @param minY - Top Y coordinate.
+     * @param maxX - Right X coordinate.
+     * @param maxY - Bottom Y coordinate.
+     * @remarks
+     * The coordinates are in tiles, not chars.
+     * There is a maximum size, but i forgor :skull:
+     * @todo remember
+     * @example
+     * Set the boundary from -5, -5 to 5, 5.
+     * ```js
+     * bot.setBoundary(-5, -5, 5, 5);
+     * ```
      */
     public setBoundary(minX: number, minY: number, maxX: number, maxY: number): void
     {
@@ -515,7 +633,32 @@ export class Bot extends EventEmitter
     }
 
     /**
-     * Gets a character.
+     * Gets a character at the specified location.
+     * @param x - The X coordinate.
+     * @param y - The Y coordinate.
+     * @returns The character or null if the location is not loaded (try Bot.fetchTiles).
+     * @example
+     * ```js
+     * await bot.fetchTiles(0, 0, 0, 0); // Make sure the character is loaded.
+     * var char = bot.getChar(0, 0);
+     * 
+     * if (!char)
+     * {
+     *     console.log("character at 0, 0 is not loaded (somehow?)");
+     *     return;
+     * }
+     * 
+     * console.log(`The character at 0, 0 is "${char.char}" with the color ${char.color}, background color ${char.bgColor} and protection ${char.protection}`);
+     * 
+     * if (typeof(char.link) === "string")
+     * {
+     *     console.log(`The link at 0, 0 leads to the URL ${char.link}`);
+     * }
+     * else if (Array.isArray(char.link))
+     * {
+     *     console.log(`The link at 0, 0 leads to the coordinates ${char.link[0]}, ${char.link[1]}`);
+     * }
+     * ```
      */
     public getChar(x: number, y: number): Char | null
     {
@@ -530,7 +673,17 @@ export class Bot extends EventEmitter
 
     /**
      * Quickly clear an area.
+     * @param x - The left X coordinate of the area.
+     * @param y - The top Y coordinate of the area.
+     * @param width - The width of the area.
+     * @param height - The height of the area.
+     * @remarks
      * Requires "Erase areas rapidly" permission.
+     * @example
+     * ```js
+     * await bot.clearArea(-100, -100, 100, 100);
+     * ```
+     * @beta
      */
     public async clearArea(x: number, y: number, width: number, height: number): Promise<void>
     {
@@ -598,6 +751,16 @@ export class Bot extends EventEmitter
 
     /**
      * Protect an area.
+     * @param x - The left X coordinate of the area.
+     * @param y - The top Y coordinate of the area.
+     * @param width - The width of the area.
+     * @param height - The height of the area.
+     * @param protection - The desired protection.
+     * @example
+     * ```js
+     * await bot.protect(-100, -100, 100, 100, Protection.MemberOnly);
+     * ```
+     * @beta
      */
     public async protect(x: number, y: number, width: number, height: number, protection: Protection): Promise<void>
     {
@@ -672,52 +835,165 @@ export class Bot extends EventEmitter
     }
 }
 
+/**
+ * An incoming cmd message.
+ */
 interface CmdEvent
 {
+    /**
+     * The data.
+     */
     data: string;
+
+    /**
+     * The sender's channel id.
+     */
     senderChannel: string;
 
+    /**
+     * Whether the sender has an account or not.
+     */
     registered: boolean;
+
+    /**
+     * Sender's username (only if {@link registered} is true)
+     */
     username?: string;
+
+    /**
+     * Sender's Uvias id (only if {@link registered} is true)
+     */
     uviasId?: string;
 }
 
+/**
+ * A chat location.
+ */
 export enum ChatLocation
 {
+    /**
+     * "This page" chat.
+     */
     Page = "page",
+
+    /**
+     * "Global" chat.
+     */
     Global = "global"
 }
 
+/**
+ * A protection value.
+ */
 export enum Protection
 {
+    /**
+     * Inherit the actual protection value from the world settings.
+     */
     Default = "default",
+
+    /**
+     * Editable by everybody.
+     */
     Public = "public",
+
+    /**
+     * Editably only by the world's members.
+     */
     MemberOnly = "member-only",
+
+    /**
+     * Editable only by the world's owner.
+     */
     OwnerOnly = "owner-only"
 }
 
+/**
+ * An incoming chat message.
+ */
 interface ChatEvent
 {
+    /**
+     * Sender's chat id.
+     */
     id: number;
+
+    /**
+     * Sender's nickname.
+     */
     nickname: string;
 
-    realUsername: string;
+    /**
+     * Sender's username (only if {@link registered} is true)
+     */
+    realUsername?: string;
+
+    /**
+     * Whether the sender is registered or not.
+     */
     registered: boolean;
+
+    /**
+     * Whether the sender is an OP or not.
+     */
     op: boolean;
+
+    /**
+     * Whether the sender is an admin or not.
+     */
     admin: boolean;
+
+    /**
+     * Whether the sender is staff or not.
+     */
     staff: boolean;
 
+    /**
+     * The location of the message
+     */
     location: ChatLocation;
+
+    /**
+     * The message text.
+     */
     message: string;
+
+    /**
+     * Sender's chat color.
+     */
     color: string;
+
+    /**
+     * The date and time on which the message was sent.
+     */
     date: Date;
 
-    rankName: string;
-    rankColor: string;
+    /**
+     * Sender's rank name, if any.
+     */
+    rankName?: string;
+
+    /**
+     * Sender's rank color, if any.
+     */
+    rankColor?: string;
 }
 
+/**
+ * A tile update.
+ */
 interface TileUpdateEvent
 {
+    /**
+     * The channel id of the person who edited the tile(s).
+     * @remarks
+     * Not to be trusted.
+     */
     channel: string,
+
+    /**
+     * The updated tiles.
+     * @todo Document better.
+     */
     tiles: any
 }

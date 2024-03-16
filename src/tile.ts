@@ -1,7 +1,17 @@
 import { advancedSplit } from "./utils";
 
+/**
+ * The base64 table used for decoding protection values.
+ * @internal
+ */
 const b64table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+/**
+ * Turns a numerical protection value into a normal one.
+ * @param value - The numerical protection value.
+ * @returns The decoded protection value.
+ * @internal
+ */
 function unshiftProtection(value: number): Protection
 {
     // sometimes i hate typescript
@@ -11,6 +21,12 @@ function unshiftProtection(value: number): Protection
     else return null;
 }
 
+/**
+ * Decodes protection values.
+ * @param tile - Tile data.
+ * @returns An array of protection values.
+ * @internal
+ */
 function decodeProtection(tile: any): Protection[]
 {
     var output = new Array(128).fill(null);
@@ -30,6 +46,10 @@ function decodeProtection(tile: any): Protection[]
     return output;
 }
 
+/**
+ * A tile.
+ * @internal
+ */
 export class Tile
 {
     private x: number;
@@ -43,6 +63,7 @@ export class Tile
 
     /**
      * Creates a new Tile from tile data.
+     * @internal
      */
     public constructor(x: number, y: number, data: any)
     {
@@ -81,6 +102,7 @@ export class Tile
 
     /**
      * @returns This tile's X coordinate.
+     * @internal
      */
     public getX(): number
     {
@@ -89,6 +111,7 @@ export class Tile
 
     /**
      * @returns This tile's Y coordinate.
+     * @internal
      */
     public getY(): number
     {
@@ -98,8 +121,9 @@ export class Tile
 
     /**
      * Gets a character.
-     * @param x charX inside the tile.
-     * @param y charY inside the tile.
+     * @param x - charX inside the tile.
+     * @param y - charY inside the tile.
+     * @internal
      */
     public getChar(x: number, y: number): Char
     {
@@ -121,14 +145,45 @@ export class Tile
     }
 }
 
+/**
+ * A character.
+ */
 export interface Char
 {
+    /**
+     * The character
+     */
     char: string,
+
+    /**
+     * The color as an 0xRRGGBB integer.
+     */
     color: number,
+    
+    /**
+     * The background color as an 0xRRGGBB integer or -1 for none.
+     */
     bgColor: number,
+
+    /**
+     * The protection. null = default, 0 = public, 1 = member-only, 2 = owner-only.
+     */
     protection: Protection,
+    
+    /**
+     * The link, if any, or null. String for URL links, two numbers in an array for coord links.
+     */
     link: Link
 }
 
+/**
+ * A link.
+ * String for URL links, two numbers in an array for coord links, null for none.
+ */
 export type Link = string | number[] | null;
+
+/**
+ * A protection value.
+ * null = default, 0 = public, 1 = member-only, 2 = owner-only.
+ */
 export type Protection = null | 0 | 1 | 2;

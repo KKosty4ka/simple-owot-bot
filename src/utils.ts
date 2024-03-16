@@ -3,6 +3,12 @@ import * as fsp from "fs/promises";
 import * as qs from "querystring";
 import * as https from "https";
 
+/**
+ * Check a token.
+ * @param token The token to check.
+ * @returns true if the token is valid, false otherwise
+ * @internal
+ */
 function checkToken(token: string): Promise<boolean>
 {
     return new Promise((resolve, reject) =>
@@ -26,8 +32,22 @@ function checkToken(token: string): Promise<boolean>
 
 /**
  * Log in to Uvias.
- * @param tokenfile Path to a file where the token will be cached.
+ * @param loginName - The login name.
+ * @param password - The password.
+ * @param tokenfile - Path to a file where the token will be cached. Optional.
  * @returns A token.
+ * @example
+ * ```js
+ * try
+ * {
+ *     var token = await uviasLogin("KKosty4ka", "noneofyourbusiness", "cached_token.txt");
+ *     console.log("KKosty4ka's token is: " + token);
+ * }
+ * catch
+ * {
+ *     console.log("Failed to log in.");
+ * }
+ * ```
  */
 export function uviasLogin(loginName: string, password: string, tokenfile?: string): Promise<string>
 {
@@ -75,7 +95,9 @@ export function uviasLogin(loginName: string, password: string, tokenfile?: stri
 /**
  * Converts tile&char coords to char coords.
  * @example
+ * ```js
  * var [x, y] = coordsTileToChar(tileX, tileY, charX, charY);
+ * ```
  */
 export function coordsTileToChar(tileX: number, tileY: number, charX: number, charY: number): number[]
 {
@@ -85,15 +107,25 @@ export function coordsTileToChar(tileX: number, tileY: number, charX: number, ch
 /**
  * Converts char coords to tile&char coords.
  * @example
+ * ```js
  * var [tileX, tileY, charX, charY] = coordsCharToTile(x, y);
+ * ```
  */
 export function coordsCharToTile(x: number, y: number): number[]
 {
     return [Math.floor(x / 16), Math.floor(y / 8), x - Math.floor(x / 16) * 16, y - Math.floor(y / 8) * 8];
 }
 
-// 100% stolen from OWOT source code
-export function advancedSplit(str: string | string[], noSurrog?: boolean, noComb?: boolean, norm?: boolean)
+/**
+ * Split a string into an array of characters.
+ * @param str - The string to split.
+ * @returns The array of characters.
+ * @remarks
+ * 100% stolen from OWOT source code
+ * @internal
+ * @todo Move this to private_utils.ts
+ */
+export function advancedSplit(str: string | string[], noSurrog?: boolean, noComb?: boolean, norm?: boolean): string[]
 {
     if(str && str.constructor == Array) return str.slice(0);
     var chars = [];
