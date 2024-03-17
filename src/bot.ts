@@ -225,6 +225,8 @@ export class Bot extends EventEmitter
                 registered: data.username ? true : false,
                 username: data.username ?? null,
                 uviasId: data.id ?? null,
+
+                ip: data.ip ?? null
             });
         });
 
@@ -973,6 +975,48 @@ export class Bot extends EventEmitter
             }
         }
     }
+
+
+    /**
+     * Enable or disable receiving tile updates.
+     * @param receive - true = receive, false = don't
+     */
+    public receiveTileUpdates(receive: boolean): void
+    {
+        this.transmit({
+            kind: "config",
+            updates: receive
+        });
+    }
+
+    /**
+     * Enable or disable receiving sender's IP address in cmd messages.
+     * @remarks
+     * Requires OP.
+     * @param receive - true = receive, false = don't
+     */
+    public receiveCmdIps(receive: boolean): void
+    {
+        this.transmit({
+            kind: "config",
+            descriptiveCmd: receive
+        });
+    }
+
+    /**
+     * Enable or disable receiving tile updates from outside the boundary.
+     * @remarks
+     * Requires membership or ownership of the world (or OP).
+     * @param receive - true = receive, false = don't
+     * @see {@link setBoundary}
+     */
+    public receiveGlobalTileUpdates(receive: boolean): void
+    {
+        this.transmit({
+            kind: "config",
+            localFilter: !receive
+        });
+    }
 }
 
 /**
@@ -1004,6 +1048,12 @@ interface CmdEvent
      * Sender's Uvias id (only if {@link registered} is true)
      */
     uviasId?: string;
+
+    /**
+     * Sender's IP address. Requires OP to see.
+     * @see {@link Bot.receiveCmdIps}
+     */
+    ip?: string;
 }
 
 /**
