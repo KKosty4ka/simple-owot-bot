@@ -58,6 +58,13 @@ export interface Bot extends EventEmitter
      */
     on(event: "chatdelete", listener: (id: number, date: Date) => void): this;
 
+    /**
+     * Fired when a guest cursor moves or hides.
+     * @remarks
+     * The bot's own cursor movements are ignored.
+     */
+    on(event: "guestCursor", listener: (channelId: string, hidden: boolean, x?: number, y?: number) => void): this;
+
 
     /**
      * Fired when any packet is received.
@@ -130,6 +137,12 @@ export interface Bot extends EventEmitter
      * @internal
      */
     on(event: "message_chatdelete", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a cursor packet is received.
+     * @internal
+     */
+    on(event: "message_cursor", listener: (data: any) => void): this;
 }
 
 /**
@@ -319,6 +332,22 @@ export class Bot extends EventEmitter
         {
             // "subject to change" - fp
             this.emit("chatdelete", data.id, data.time);
+        });
+
+        this.on("message_cursor", (data: any) =>
+        {
+            // TODO: maybe have a list of currently visible cursors
+            if (data.channel === this.channelId) return;
+
+            if (data.hidden)
+            {
+                this.emit("guestCursor", data.channel, true);
+            }
+            else
+            {
+                var [x, y] = utils.coordsTileToChar(data.position.tileX, data.position.tileY, data.position.charX, data.position.charY);
+                this.emit("guestCursor", data.channel, false, x, y);
+            }
         });
     }
 
