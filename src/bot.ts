@@ -51,6 +51,13 @@ export interface Bot extends EventEmitter
      */
     on(event: "announcement", listener: (text: string) => void): this;
 
+    /**
+     * Fired when a chat message is deleted.
+     * @remarks
+     * "subject to change" - fp
+     */
+    on(event: "chatdelete", listener: (id: number, date: Date) => void): this;
+
 
     /**
      * Fired when any packet is received.
@@ -117,6 +124,12 @@ export interface Bot extends EventEmitter
      * @internal
      */
     on(event: "message_announcement", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a chatdelete packet is received.
+     * @internal
+     */
+    on(event: "message_chatdelete", listener: (data: any) => void): this;
 }
 
 /**
@@ -300,6 +313,12 @@ export class Bot extends EventEmitter
         this.on("message_announcement", (data: any) =>
         {
             this.emit("announcement", data.text);
+        });
+
+        this.on("message_chatdelete", (data: any) =>
+        {
+            // "subject to change" - fp
+            this.emit("chatdelete", data.id, data.time);
         });
     }
 
