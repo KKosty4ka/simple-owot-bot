@@ -41,6 +41,11 @@ export interface Bot extends EventEmitter
      */
     on(event: "tileUpdate", listener: (event: TileUpdateEvent) => void): this;
 
+    /**
+     * Fired when the user count changes.
+     */
+    on(event: "userCountUpdate", listener: (oldCount: number, newCount: number) => void): this;
+
 
     /**
      * Fired when any packet is received.
@@ -89,6 +94,18 @@ export interface Bot extends EventEmitter
      * @internal
      */
     on(event: "message_ping", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a channel packet is received.
+     * @internal
+     */
+    on(event: "message_channel", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a user_count packet is received.
+     * @internal
+     */
+    on(event: "message_user_count", listener: (data: any) => void): this;
 }
 
 /**
@@ -97,6 +114,9 @@ export interface Bot extends EventEmitter
 export class Bot extends EventEmitter
 {
     private ws: WebSocket;
+    private _userCount: number | undefined;
+    private _channelId: string;
+    private _chatId: number;
 
     private nextPingId: number = 0;
     private nextEditId: number = 0;
@@ -154,7 +174,6 @@ export class Bot extends EventEmitter
             });
 
             this.setFlushInterval(flushInterval);
-            this.emit("connected");
         });
 
         // TODO: still a mess :\
@@ -249,7 +268,63 @@ export class Bot extends EventEmitter
 
             this.emit("chathistory");
         });
+
+        this.on("message_channel", (data: any) =>
+        {
+            this._channelId = data.sender;
+            this._chatId = data.id;
+            this._userCount = data.initial_user_count;
+
+            this.emit("connected");
+        });
+
+        this.on("message_user_count", (data: any) =>
+        {
+            this._userCount = data.count;
+
+            this.emit("userCountUpdate");
+        });
     }
+
+
+    /**
+     * The current user count, or undefined if the world has no chat.
+     * @example
+     * ```js
+     * bot.chat(`There are currently ${bot.userCount} users online.`);
+     * ```
+     */
+    public get userCount(): number | undefined
+    {
+        return this._userCount;
+    }
+
+    /**
+     * The bot's channel id. Used in tile updates and cmd messages.
+     * @example
+     * ```js
+     * bot.chat(`My channel ID is ${bot.channelId}.`);
+     * ```
+     */
+    public get channelId(): string
+    {
+        return this._channelId;
+    }
+
+    /**
+     * The bot's chat id, or -1 if the world has no chat.
+     * @remarks
+     * If the world has no chat, the bot can still send messages in global, but it is impossible to get the chat id.
+     * @example
+     * ```js
+     * bot.chat(`As you can see, my chat ID is ${bot.chatId}.`);
+     * ```
+     */
+    public get chatId(): number
+    {
+        return this._chatId;
+    }
+
 
     /**
      * Flush all pending writes from the write buffer.
