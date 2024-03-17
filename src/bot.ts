@@ -17,9 +17,9 @@ export interface Bot extends EventEmitter
     on(event: "disconnected", listener: () => void): this;
 
     /**
-     * Fired when chat history becomes avaliable.
+     * Fired when chat history is loaded.
      */
-    on(event: "chathistory", listener: () => void): this;
+    on(event: "chathistory", listener: (global?: ChatEvent[], page?: ChatEvent[]) => void): this;
 
     /**
      * Fired when a cmd message is received.
@@ -163,7 +163,13 @@ export class Bot extends EventEmitter
     private writeBuffer: any[][] = [];
     private waitingEdits: any = {};
 
+    /**
+     * @deprecated Use the chathistory event instead.
+     */
     public pageChatHistory: ChatEvent[];
+    /**
+     * @deprecated Use the chathistory event instead.
+     */
     public globalChatHistory: ChatEvent[];
     private tiles: any = {};
 
@@ -302,10 +308,11 @@ export class Bot extends EventEmitter
 
         this.on("message_chathistory", (data: any) =>
         {
+            // TODO: deprecated, remove in 2.0.0
             this.globalChatHistory = data.global_chat_prev;
             this.pageChatHistory = data.page_chat_prev;
 
-            this.emit("chathistory");
+            this.emit("chathistory", data.global_chat_prev, data.page_chat_prev);
         });
 
         this.on("message_channel", (data: any) =>
