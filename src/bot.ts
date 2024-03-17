@@ -46,6 +46,11 @@ export interface Bot extends EventEmitter
      */
     on(event: "userCountUpdate", listener: (oldCount: number, newCount: number) => void): this;
 
+    /**
+     * Fired when an announcement is shown.
+     */
+    on(event: "announcement", listener: (text: string) => void): this;
+
 
     /**
      * Fired when any packet is received.
@@ -106,6 +111,12 @@ export interface Bot extends EventEmitter
      * @internal
      */
     on(event: "message_user_count", listener: (data: any) => void): this;
+
+    /**
+     * Fired when a announcement packet is received.
+     * @internal
+     */
+    on(event: "message_announcement", listener: (data: any) => void): this;
 }
 
 /**
@@ -280,9 +291,15 @@ export class Bot extends EventEmitter
 
         this.on("message_user_count", (data: any) =>
         {
+            var old = this._userCount;
             this._userCount = data.count;
 
-            this.emit("userCountUpdate");
+            this.emit("userCountUpdate", old, data.count);
+        });
+
+        this.on("message_announcement", (data: any) =>
+        {
+            this.emit("announcement", data.text);
         });
     }
 
