@@ -66,6 +66,11 @@ export interface Bot extends EventEmitter
      */
     on(event: "guestCursor", listener: (channelId: string, hidden: boolean, x?: number, y?: number) => void): this;
 
+    /**
+     * Fired when writes are accepted/rejected;
+     */
+    on(event: "writeResult", listener: (id: number, state: WriteResultState) => void): this;
+
 
     /**
      * Fired when any packet is received.
@@ -253,19 +258,31 @@ export class Bot extends EventEmitter
 
         this.on("message_write", (data: MessageWrite) =>
         {
-            for (var j = 0; j < data.accepted.length; j++) this.waitingEdits.delete(data.accepted[j]);
+            for (var j = 0; j < data.accepted.length; j++)
+            {
+                var id = data.accepted[j];
+
+                this.waitingEdits.delete(id);
+                this.emit("writeResult", id, WriteResultState.Accepted);
+            }
 
             for (var is in data.rejected)
             {
                 var rej: number = data.rejected[is];
                 var i = Number(is);
 
-                if (rej === 1 || rej === 4) this.waitingEdits.delete(i);
+                if (rej === 1 || rej === 4)
+                {
+                    this.waitingEdits.delete(i);
+                    this.emit("writeResult", i, WriteResultState.Rejected);
+                }
                 else
                 {
+                    this.emit("writeResult", i, WriteResultState.Ratelimited);
+
                     var edit = this.waitingEdits.get(i);
                     if (!edit) continue; // wtf
-                    
+
                     this.writeBuffer.push(edit);
                 }
             }
@@ -557,27 +574,42 @@ export class Bot extends EventEmitter
      * bot.writeChar(0, 0, "E", 0x008000);
      * ```
      * @example
-     * Write a blue "c" on red background at 1, 2
+     * Write a blue "c" on red background at 1, 2 and wait for it to go through
      * ```js
-     * bot.writeChar(1, 2, "c", 0x0000ff, 0xff0000);
+     * await bot.writeChar(1, 2, "c", 0x0000ff, 0xff0000);
      * ```
      */
-    public writeChar(x: number, y: number, char: string, color: number = 0x000000, bgcolor: number = -1): void
+    public writeChar(x: number, y: number, char: string, color: number = 0x000000, bgcolor: number = -1): Promise<void>
     {
-        var edit: Write = [
-            Math.floor(y / 8),
-            Math.floor(x / 16),
-            y - Math.floor(y / 8) * 8,
-            x - Math.floor(x / 16) * 16,
-            Date.now(),
-            char,
-            ++this.nextEditId,
-            color,
-            bgcolor
-        ];
+        return new Promise((resolve, reject) =>
+        {
+            var id = ++this.nextEditId;
+            
+            var onres = (eid: number, state: WriteResultState) =>
+            {
+                if (eid != id) return;
+                if (state === WriteResultState.Ratelimited) return;
 
-        this.writeBuffer.push(edit);
-        this.waitingEdits.set(edit[6], edit);
+                if (state === WriteResultState.Accepted) resolve();
+                else reject();
+            }
+            
+            var edit: Write = [
+                Math.floor(y / 8),
+                Math.floor(x / 16),
+                y - Math.floor(y / 8) * 8,
+                x - Math.floor(x / 16) * 16,
+                Date.now(),
+                char,
+                id,
+                color,
+                bgcolor
+            ];
+
+            this.on("writeResult", onres);
+            this.writeBuffer.push(edit);
+            this.waitingEdits.set(id, edit);
+        });
     }
 
     /**
@@ -593,15 +625,16 @@ export class Bot extends EventEmitter
      * bot.writeText(0, 0, "hi!", 0x008000);
      * ```
      * @example
-     * Write a blue "fuck" on red background at 1, 2
+     * Write a blue "fuck" on red background at 1, 2 and wait for it to go through
      * ```js
-     * bot.writeText(1, 2, "fuck", 0x0000ff, 0xff0000);
+     * await bot.writeText(1, 2, "fuck", 0x0000ff, 0xff0000);
      * ```
      */
-    public writeText(x: number, y: number, text: string, color: number = 0x000000, bgcolor: number = -1): void
+    public writeText(x: number, y: number, text: string, color: number = 0x000000, bgcolor: number = -1): Promise<void[]>
     {
         const ix = x;
         var stext = advancedSplit(text);
+        var promises = [];
 
         for (var i = 0; i < stext.length; i++)
         {
@@ -614,10 +647,12 @@ export class Bot extends EventEmitter
             }
             else
             {
-                this.writeChar(x, y, char, color, bgcolor);
+                promises.push(this.writeChar(x, y, char, color, bgcolor));
 				x++;
             }
         }
+
+        return Promise.all(promises);
     }
 
     /**
@@ -1153,4 +1188,11 @@ interface TileUpdateEvent
      * {"tileX,tileY": tile}
      */
     tiles: Map<string, Tile>
+}
+
+enum WriteResultState
+{
+    Accepted,
+    Ratelimited,
+    Rejected
 }
