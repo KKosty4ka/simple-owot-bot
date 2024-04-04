@@ -1,4 +1,4 @@
-import { sleep } from "./private_utils";
+import { sleep, advancedSplit } from "./private_utils";
 import { EventEmitter } from "events";
 import { Tile, Char } from "./tile";
 import * as utils from "./utils";
@@ -163,14 +163,6 @@ export class Bot extends EventEmitter
     private writeBuffer: any[][] = [];
     private waitingEdits: any = {};
 
-    /**
-     * @deprecated Use the chathistory event instead.
-     */
-    public pageChatHistory: ChatEvent[];
-    /**
-     * @deprecated Use the chathistory event instead.
-     */
-    public globalChatHistory: ChatEvent[];
     private tiles: any = {};
 
     /**
@@ -308,10 +300,6 @@ export class Bot extends EventEmitter
 
         this.on("message_chathistory", (data: any) =>
         {
-            // TODO: deprecated, remove in 2.0.0
-            this.globalChatHistory = data.global_chat_prev;
-            this.pageChatHistory = data.page_chat_prev;
-
             this.emit("chathistory", data.global_chat_prev, data.page_chat_prev);
         });
 
@@ -439,29 +427,6 @@ export class Bot extends EventEmitter
         this.emit("writeBufferEmpty");
     }
 
-
-    /**
-     * Deprecated, do not use.
-     * @deprecated Instead use the "connected" event.
-     */
-    public waitForReady(): Promise<void>
-    {
-        return new Promise((resolve, reject) =>
-        {
-            if (this.ws.readyState === WebSocket.OPEN) resolve();
-            else if (this.ws.readyState === WebSocket.CONNECTING)
-            {
-                var onopen = () =>
-                {
-                    this.ws.off("open", onopen);
-                    resolve();
-                }
-
-                this.ws.on("open", onopen);
-            }
-            else reject("This bot has been disconnected already.");
-        });
-    }
 
     /**
      * Sends JSON data to the server.
@@ -616,7 +581,7 @@ export class Bot extends EventEmitter
     public writeText(x: number, y: number, text: string, color: number = 0x000000, bgcolor: number = -1): void
     {
         const ix = x;
-        var stext = utils.advancedSplit(text);
+        var stext = advancedSplit(text);
 
         for (var i = 0; i < stext.length; i++)
         {

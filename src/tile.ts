@@ -1,4 +1,4 @@
-import { advancedSplit } from "./utils";
+import { advancedSplit } from "./private_utils";
 
 /**
  * The base64 table used for decoding protection values.
