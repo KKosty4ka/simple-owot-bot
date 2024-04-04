@@ -172,6 +172,13 @@ export class Bot extends EventEmitter
     private tiles: Map<string, Tile> = new Map();
 
     /**
+     * Currently visible guest cursors. (coords by channel id)
+     * @remarks
+     * Does not include the bot's own cursor.
+     */
+    public guestCursors: Map<string, [number, number]> = new Map();
+
+    /**
      * Creates a new bot.
      * @param url - The url to connect to. Please use ?hide=1 to prevent inflating the user count.
      * @param token - An Uvias token to use. (Optional)
@@ -358,19 +365,21 @@ export class Bot extends EventEmitter
 
         this.on("message_cursor", (data: MessageCursor) =>
         {
-            // TODO: maybe have a list of currently visible cursors
             if (data.channel === this.channelId) return;
 
             if (data.hidden)
             {
                 this.emit("guestCursor", data.channel, true);
+                this.guestCursors.delete(data.channel);
             }
             else
             {
                 if (!data.position) throw new Error();
 
                 var [x, y] = utils.coordsTileToChar(data.position.tileX, data.position.tileY, data.position.charX, data.position.charY);
+
                 this.emit("guestCursor", data.channel, false, x, y);
+                this.guestCursors.set(data.channel, [x, y]);
             }
         });
     }
