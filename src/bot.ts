@@ -161,9 +161,9 @@ export class Bot extends EventEmitter
 
     private flushInterval: NodeJS.Timeout;
     private writeBuffer: any[][] = [];
-    private waitingEdits: any = {};
+    private waitingEdits: Map<number, any> = new Map();
 
-    private tiles: any = {};
+    private tiles: Map<string, Tile> = new Map();
 
     /**
      * Creates a new bot.
@@ -252,22 +252,23 @@ export class Bot extends EventEmitter
 
         this.on("message_write", (data: any) =>
         {
-            for (var j = 0; j < data.accepted.length; j++) delete this.waitingEdits[data.accepted[j]];
+            for (var j = 0; j < data.accepted.length; j++) this.waitingEdits.delete(data.accepted[j]);
 
-            for (var i in data.rejected)
+            for (var is in data.rejected)
             {
-                var rej: number = data.rejected[i];
+                var rej: number = data.rejected[is];
+                var i = Number(is);
 
-                if (rej === 1 || rej === 4) delete this.waitingEdits[i];
-                else this.writeBuffer.push(this.waitingEdits[i]);
+                if (rej === 1 || rej === 4) this.waitingEdits.delete(i);
+                else this.writeBuffer.push(this.waitingEdits.get(i));
             }
 
-            if (Object.keys(this.waitingEdits).length === 0 && this.writeBuffer.length === 0) this.emit("writeBufferEmpty");
+            if (this.waitingEdits.size === 0 && this.writeBuffer.length === 0) this.emit("writeBufferEmpty");
         });
 
         this.on("message_tileUpdate", (data: any) =>
         {
-            var evtTiles: any = {};
+            var evtTiles = new Map();
 
             for (var coords in data.tiles)
             {
@@ -276,8 +277,8 @@ export class Bot extends EventEmitter
                 var tileY = Number.parseInt(nums[0]);
 
                 var tile = new Tile(tileX, tileY, data.tiles[coords]);
-                this.tiles[`${tileX},${tileY}`] = tile;
-                evtTiles[`${tileX},${tileY}`] = tile;
+                this.tiles.set(`${tileX},${tileY}`, tile);
+                evtTiles.set(`${tileX},${tileY}`, tile);
             }
 
             this.emit("tileUpdate", {
@@ -294,7 +295,7 @@ export class Bot extends EventEmitter
                 var tileX = Number.parseInt(nums[1]);
                 var tileY = Number.parseInt(nums[0]);
 
-                this.tiles[`${tileX},${tileY}`] = new Tile(tileX, tileY, data.tiles[coords]);
+                this.tiles.set(`${tileX},${tileY}`, new Tile(tileX, tileY, data.tiles[coords]));
             }
         });
 
@@ -421,7 +422,7 @@ export class Bot extends EventEmitter
      */
     public clearWriteBuffer(): void
     {
-        this.waitingEdits = {};
+        this.waitingEdits.clear();
         this.writeBuffer = [];
 
         this.emit("writeBufferEmpty");
@@ -554,10 +555,11 @@ export class Bot extends EventEmitter
      */
     public writeChar(x: number, y: number, char: string, color: number = 0x000000, bgcolor: number = -1): void
     {
-        var edit = [Math.floor(y / 8), Math.floor(x / 16), y - Math.floor(y / 8) * 8, x - Math.floor(x / 16) * 16, Date.now(), char, ++this.nextEditId, color, bgcolor];
+        var id = ++this.nextEditId;
+        var edit = [Math.floor(y / 8), Math.floor(x / 16), y - Math.floor(y / 8) * 8, x - Math.floor(x / 16) * 16, Date.now(), char, id, color, bgcolor];
 
         this.writeBuffer.push(edit);
-        this.waitingEdits[edit[6].toString()] = edit;
+        this.waitingEdits.set(id, edit);
     }
 
     /**
@@ -778,7 +780,7 @@ export class Bot extends EventEmitter
     {
         var [tileX, tileY, charX, charY] = utils.coordsCharToTile(x, y);
 
-        var tile = this.tiles[`${tileX},${tileY}`];
+        var tile = this.tiles.get(`${tileX},${tileY}`);
         if (!tile) return null;
 
         return tile.getChar(charX, charY);
@@ -1155,7 +1157,8 @@ interface TileUpdateEvent
 
     /**
      * The updated tiles.
-     * @todo Document better.
+     * 
+     * {"tileX,tileY": tile}
      */
-    tiles: any
+    tiles: Map<string, Tile>
 }
