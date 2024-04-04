@@ -161,8 +161,8 @@ export class Bot extends EventEmitter
     private nextFetchId: number = 0;
 
     private flushInterval: NodeJS.Timeout;
-    private writeBuffer: any[][] = [];
-    private waitingEdits: Map<number, any> = new Map();
+    private writeBuffer: Write[] = [];
+    private waitingEdits: Map<number, Write> = new Map();
 
     private tiles: Map<string, Tile> = new Map();
 
@@ -261,7 +261,13 @@ export class Bot extends EventEmitter
                 var i = Number(is);
 
                 if (rej === 1 || rej === 4) this.waitingEdits.delete(i);
-                else this.writeBuffer.push(this.waitingEdits.get(i));
+                else
+                {
+                    var edit = this.waitingEdits.get(i);
+                    if (!edit) continue; // wtf
+                    
+                    this.writeBuffer.push(edit);
+                }
             }
 
             if (this.waitingEdits.size === 0 && this.writeBuffer.length === 0) this.emit("writeBufferEmpty");
@@ -558,11 +564,20 @@ export class Bot extends EventEmitter
      */
     public writeChar(x: number, y: number, char: string, color: number = 0x000000, bgcolor: number = -1): void
     {
-        var id = ++this.nextEditId;
-        var edit = [Math.floor(y / 8), Math.floor(x / 16), y - Math.floor(y / 8) * 8, x - Math.floor(x / 16) * 16, Date.now(), char, id, color, bgcolor];
+        var edit: Write = [
+            Math.floor(y / 8),
+            Math.floor(x / 16),
+            y - Math.floor(y / 8) * 8,
+            x - Math.floor(x / 16) * 16,
+            Date.now(),
+            char,
+            ++this.nextEditId,
+            color,
+            bgcolor
+        ];
 
         this.writeBuffer.push(edit);
-        this.waitingEdits.set(id, edit);
+        this.waitingEdits.set(edit[6], edit);
     }
 
     /**
@@ -995,6 +1010,12 @@ export class Bot extends EventEmitter
         });
     }
 }
+
+/**
+ * A write.
+ * @internal
+ */
+type Write = [number, number, number, number, number, string, number, number, number];
 
 /**
  * An incoming cmd message.
