@@ -66,6 +66,7 @@ export interface MessageTileUpdate
 export interface MessageFetch
 {
     kind: "fetch";
+    request?: number;
     tiles: {
         [coords: string]: RawTile;
     };

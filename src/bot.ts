@@ -747,9 +747,9 @@ export class Bot extends EventEmitter
 
             var id = this.nextFetchId++;
 
-            var onmsg = (data: any) =>
+            var onmsg = (data: MessageFetch) =>
             {
-                if (data.request != id) return;
+                if (data.request !== id) return;
 
                 this.off("message_fetch", onmsg);
                 resolve();
