@@ -1,3 +1,4 @@
+import { MessageChat, MessageChatHistory, MessageCmd, MessageFetch, MessagePing, MessageTileUpdate, MessageWrite, MessageChannel, MessageUserCount, MessageAnnouncement, MessageChatDelete, MessageCursor } from "./messages";
 import { sleep, advancedSplit } from "./private_utils";
 import { EventEmitter } from "events";
 import { Tile, Char } from "./tile";
@@ -76,73 +77,73 @@ export interface Bot extends EventEmitter
      * Fired when a cmd packet is received.
      * @internal
      */
-    on(event: "message_cmd", listener: (data: any) => void): this;
+    on(event: "message_cmd", listener: (data: MessageCmd) => void): this;
 
     /**
      * Fired when a chat packet is received.
      * @internal
      */
-    on(event: "message_chat", listener: (data: any) => void): this;
+    on(event: "message_chat", listener: (data: MessageChat) => void): this;
 
     /**
      * Fired when a write packet is received.
      * @internal
      */
-    on(event: "message_write", listener: (data: any) => void): this;
+    on(event: "message_write", listener: (data: MessageWrite) => void): this;
 
     /**
      * Fired when a tileUpdate packet is received.
      * @internal
      */
-    on(event: "message_tileUpdate", listener: (data: any) => void): this;
+    on(event: "message_tileUpdate", listener: (data: MessageTileUpdate) => void): this;
 
     /**
      * Fired when a fetch packet is received.
      * @internal
      */
-    on(event: "message_fetch", listener: (data: any) => void): this;
+    on(event: "message_fetch", listener: (data: MessageFetch) => void): this;
 
     /**
      * Fired when a chathistory packet is received.
      * @internal
      */
-    on(event: "message_chathistory", listener: (data: any) => void): this;
+    on(event: "message_chathistory", listener: (data: MessageChatHistory) => void): this;
 
     /**
      * Fired when a ping packet is received.
      * @internal
      */
-    on(event: "message_ping", listener: (data: any) => void): this;
+    on(event: "message_ping", listener: (data: MessagePing) => void): this;
 
     /**
      * Fired when a channel packet is received.
      * @internal
      */
-    on(event: "message_channel", listener: (data: any) => void): this;
+    on(event: "message_channel", listener: (data: MessageChannel) => void): this;
 
     /**
      * Fired when a user_count packet is received.
      * @internal
      */
-    on(event: "message_user_count", listener: (data: any) => void): this;
+    on(event: "message_user_count", listener: (data: MessageUserCount) => void): this;
 
     /**
      * Fired when a announcement packet is received.
      * @internal
      */
-    on(event: "message_announcement", listener: (data: any) => void): this;
+    on(event: "message_announcement", listener: (data: MessageAnnouncement) => void): this;
 
     /**
      * Fired when a chatdelete packet is received.
      * @internal
      */
-    on(event: "message_chatdelete", listener: (data: any) => void): this;
+    on(event: "message_chatdelete", listener: (data: MessageChatDelete) => void): this;
 
     /**
      * Fired when a cursor packet is received.
      * @internal
      */
-    on(event: "message_cursor", listener: (data: any) => void): this;
+    on(event: "message_cursor", listener: (data: MessageCursor) => void): this;
 }
 
 /**
@@ -214,7 +215,7 @@ export class Bot extends EventEmitter
         // TODO: still a mess :\
         this.on("message", (data: any) => this.emit("message_" + data.kind, data));
 
-        this.on("message_cmd", (data: any) =>
+        this.on("message_cmd", (data: MessageCmd) =>
         {
             this.emit("cmd", {
                 data: data.data,
@@ -228,7 +229,7 @@ export class Bot extends EventEmitter
             });
         });
 
-        this.on("message_chat", (data: any) =>
+        this.on("message_chat", (data: MessageChat) =>
         {
             this.emit("chat", {
                 id: data.id,
@@ -250,7 +251,7 @@ export class Bot extends EventEmitter
             });
         });
 
-        this.on("message_write", (data: any) =>
+        this.on("message_write", (data: MessageWrite) =>
         {
             for (var j = 0; j < data.accepted.length; j++) this.waitingEdits.delete(data.accepted[j]);
 
@@ -266,7 +267,7 @@ export class Bot extends EventEmitter
             if (this.waitingEdits.size === 0 && this.writeBuffer.length === 0) this.emit("writeBufferEmpty");
         });
 
-        this.on("message_tileUpdate", (data: any) =>
+        this.on("message_tileUpdate", (data: MessageTileUpdate) =>
         {
             var evtTiles = new Map();
 
@@ -287,7 +288,7 @@ export class Bot extends EventEmitter
             });
         });
 
-        this.on("message_fetch", (data: any) =>
+        this.on("message_fetch", (data: MessageFetch) =>
         {
             for (var coords in data.tiles)
             {
@@ -299,12 +300,12 @@ export class Bot extends EventEmitter
             }
         });
 
-        this.on("message_chathistory", (data: any) =>
+        this.on("message_chathistory", (data: MessageChatHistory) =>
         {
             this.emit("chathistory", data.global_chat_prev, data.page_chat_prev);
         });
 
-        this.on("message_channel", (data: any) =>
+        this.on("message_channel", (data: MessageChannel) =>
         {
             this._channelId = data.sender;
             this._chatId = data.id;
@@ -313,7 +314,7 @@ export class Bot extends EventEmitter
             this.emit("connected");
         });
 
-        this.on("message_user_count", (data: any) =>
+        this.on("message_user_count", (data: MessageUserCount) =>
         {
             var old = this._userCount;
             this._userCount = data.count;
@@ -321,18 +322,18 @@ export class Bot extends EventEmitter
             this.emit("userCountUpdate", old, data.count);
         });
 
-        this.on("message_announcement", (data: any) =>
+        this.on("message_announcement", (data: MessageAnnouncement) =>
         {
             this.emit("announcement", data.text);
         });
 
-        this.on("message_chatdelete", (data: any) =>
+        this.on("message_chatdelete", (data: MessageChatDelete) =>
         {
             // "subject to change" - fp
             this.emit("chatdelete", data.id, data.time);
         });
 
-        this.on("message_cursor", (data: any) =>
+        this.on("message_cursor", (data: MessageCursor) =>
         {
             // TODO: maybe have a list of currently visible cursors
             if (data.channel === this.channelId) return;
@@ -343,6 +344,8 @@ export class Bot extends EventEmitter
             }
             else
             {
+                if (!data.position) throw new Error();
+
                 var [x, y] = utils.coordsTileToChar(data.position.tileX, data.position.tileY, data.position.charX, data.position.charY);
                 this.emit("guestCursor", data.channel, false, x, y);
             }
@@ -456,7 +459,7 @@ export class Bot extends EventEmitter
             var id = ++this.nextPingId;
             var startDate = Date.now();
 
-            var onmsg = (data: any) =>
+            var onmsg = (data: MessagePing) =>
             {
                 if (data.id != id) return;
 
@@ -483,7 +486,7 @@ export class Bot extends EventEmitter
      * bot.chat("Hi everyone!", ChatLocation.Global, "", "#112233");
      * ```
      */
-    public chat(message: string, location: ChatLocation = ChatLocation.Page, nickname: string = "", color: string = "#000000"): void
+    public chat(message: string, location: ChatLocation = "page", nickname: string = "", color: string = "#000000"): void
     {
         this.transmit({
 			kind: "chat",
@@ -916,7 +919,7 @@ export class Bot extends EventEmitter
 
                     this.transmit({
                         kind: "protect",
-                        action: protection === Protection.Default ? "unprotect" : "protect",
+                        action: protection === "default" ? "unprotect" : "protect",
                         data: {
                             tileX: dx,
                             tileY: dy,
@@ -928,7 +931,7 @@ export class Bot extends EventEmitter
                             charHeight: cy2 - cy1 + 1,
 
                             precise: true,
-                            type: protection === Protection.Default ? undefined : protection
+                            type: protection === "default" ? undefined : protection
                         }
                     });
                 }
@@ -936,11 +939,11 @@ export class Bot extends EventEmitter
                 {
                     this.transmit({
                         kind: "protect",
-                        action: protection === Protection.Default ? "unprotect" : "protect",
+                        action: protection === "default" ? "unprotect" : "protect",
                         data: {
                             tileX: dx,
                             tileY: dy,
-                            type: protection === Protection.Default ? undefined : protection
+                            type: protection === "default" ? undefined : protection
                         }
                     });
                 }
@@ -1033,44 +1036,12 @@ interface CmdEvent
 /**
  * A chat location.
  */
-export enum ChatLocation
-{
-    /**
-     * "This page" chat.
-     */
-    Page = "page",
-
-    /**
-     * "Global" chat.
-     */
-    Global = "global"
-}
+export type ChatLocation = "page" | "global";
 
 /**
  * A protection value.
  */
-export enum Protection
-{
-    /**
-     * Inherit the actual protection value from the world settings.
-     */
-    Default = "default",
-
-    /**
-     * Editable by everybody.
-     */
-    Public = "public",
-
-    /**
-     * Editably only by the world's members.
-     */
-    MemberOnly = "member-only",
-
-    /**
-     * Editable only by the world's owner.
-     */
-    OwnerOnly = "owner-only"
-}
+export type Protection = "default" | "public" | "member-only" | "owner-only";
 
 /**
  * An incoming chat message.

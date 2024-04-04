@@ -27,7 +27,7 @@ function unshiftProtection(value: number): Protection
  * @returns An array of protection values.
  * @internal
  */
-function decodeProtection(tile: any): Protection[]
+function decodeProtection(tile: RawTile): Protection[]
 {
     var output = new Array(128).fill(null);
     if (!tile.properties.char) return output;
@@ -65,7 +65,7 @@ export class Tile
      * Creates a new Tile from tile data.
      * @internal
      */
-    public constructor(x: number, y: number, data: any)
+    public constructor(x: number, y: number, data: RawTile)
     {
         this.x = x;
         this.y = y;
@@ -93,7 +93,19 @@ export class Tile
                 for (var cx in data.properties.cell_props[cy])
                 {
                     var link = data.properties.cell_props[cy][cx].link;
-                    this.links[parseInt(cy) * 16 + parseInt(cx)] = link.type === "url" ? link.url : [link.link_tileX, link.link_tileY];
+
+                    if (link.type === "url")
+                    {
+                        if (link.url === undefined) throw new Error();
+
+                        this.links[parseInt(cy) * 16 + parseInt(cx)] = link.url;
+                    }
+                    else
+                    {
+                        if (link.link_tileX === undefined || link.link_tileY === undefined) throw new Error();
+
+                        this.links[parseInt(cy) * 16 + parseInt(cx)] = [link.link_tileX, link.link_tileY];
+                    }
                 }
             }
         }
@@ -187,3 +199,30 @@ export type Link = string | number[] | null;
  * null = default, 0 = public, 1 = member-only, 2 = owner-only.
  */
 export type Protection = null | 0 | 1 | 2;
+
+/**
+ * A raw tile. Really not fun to work with.
+ * @internal
+ */
+export interface RawTile
+{
+    content: string;
+    properties: {
+        writability: Protection;
+        color?: number[];
+        bcolor?: number[];
+        char?: string;
+        cell_props?: {
+            [y: string]: {
+                [x: string]: {
+                    link: {
+                        type: "url" | "coord";
+                        url?: string;
+                        link_tileX?: number;
+                        link_tileY?: number;
+                    };
+                }
+            }
+        };
+    };
+}
