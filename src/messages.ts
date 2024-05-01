@@ -1,4 +1,4 @@
-import { ChatLocation } from "./bot";
+import { ChatLocation } from "./events";
 import { RawTile } from "./tile";
 
 /**
