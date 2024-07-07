@@ -166,3 +166,14 @@ export interface MessageCursor
         charY: number;
     };
 }
+
+/**
+ * @internal
+ */
+export interface MessageStats
+{
+    kind: "stats",
+    creationDate: number,
+    views: number,
+    id?: number
+}
