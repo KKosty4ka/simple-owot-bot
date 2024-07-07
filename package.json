@@ -16,7 +16,7 @@
         "lib/**/*"
     ],
     "author": "KKosty4ka",
-    "license": "GPL-3.0",
+    "license": "MIT",
     "devDependencies": {
         "@types/node": "^20.14.10",
         "@types/qs": "^6.9.15",
