@@ -12,6 +12,7 @@ export interface MessageCmd
     username?: string;
     id?: string;
     ip?: string;
+    coords?: [number, number, number, number];
 }
 
 /**

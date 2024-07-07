@@ -235,10 +235,11 @@ export class Bot extends EventEmitter
                 senderChannel: data.sender,
 
                 registered: data.username ? true : false,
-                username: data.username ?? null,
-                uviasId: data.id ?? null,
+                username: data.username,
+                uviasId: data.id,
 
-                ip: data.ip ?? null
+                ip: data.ip,
+                coords: data.coords ? utils.coordsTileToChar(...data.coords) : undefined
             });
         });
 
@@ -528,6 +529,34 @@ export class Bot extends EventEmitter
 			location: location,
 			color: color
 		});
+    }
+
+    /**
+     * Send a cmd message.
+     * @param data - The text of the message.
+     * @param include_username - Whether to include the bot's username and Uvias ID (default false).
+     * @param coords - The link coords, if any.
+     * @example
+     * ```js
+     * bot.cmd("hi cmders!");
+     * ```
+     * @example
+     * ```js
+     * bot.cmd("hi cmders! (you can see my username too)", true);
+     * ```
+     * @example
+     * ```js
+     * bot.cmd("hi cmders! (you can see the coords of the link i clicked on)", false, [123, 456]);
+     * ```
+     */
+    public cmd(data: string, include_username: boolean = false, coords?: [number, number])
+    {
+        this.transmit({
+            kind: "cmd",
+            data,
+            include_username,
+            coords: coords ? utils.coordsCharToTile(...coords) : undefined
+        });
     }
 
 

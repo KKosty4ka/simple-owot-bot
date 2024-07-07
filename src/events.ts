@@ -40,6 +40,11 @@ export interface CmdEvent
      * @see {@link Bot.receiveCmdIps}
      */
     ip?: string;
+
+    /**
+     * The link coords, if avaliable.
+     */
+    coords?: [number, number];
 }
 
 /**
