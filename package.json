@@ -18,12 +18,12 @@
     "author": "KKosty4ka",
     "license": "GPL-3.0",
     "devDependencies": {
-        "@types/node": "^20.14.2",
+        "@types/node": "^20.14.10",
         "@types/qs": "^6.9.15",
         "@types/ws": "^8.5.10",
-        "typescript": "^5.4.5"
+        "typescript": "^5.5.3"
     },
     "dependencies": {
-        "ws": "^8.17.0"
+        "ws": "^8.18.0"
     }
 }
