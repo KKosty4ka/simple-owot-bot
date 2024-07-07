@@ -1,4 +1,4 @@
-import { MessageChat, MessageChatHistory, MessageCmd, MessageFetch, MessagePing, MessageTileUpdate, MessageWrite, MessageChannel, MessageUserCount, MessageAnnouncement, MessageChatDelete, MessageCursor } from "./messages";
+import { MessageChat, MessageChatHistory, MessageCmd, MessageFetch, MessagePing, MessageTileUpdate, MessageWrite, MessageChannel, MessageUserCount, MessageAnnouncement, MessageChatDelete, MessageCursor, MessageStats } from "./messages";
 import { ChatEvent, CmdEvent, TileUpdateEvent, ChatLocation } from "./events";
 import { sleep, advancedSplit } from "./private_utils";
 import { EventEmitter } from "events";
@@ -150,6 +150,12 @@ export interface Bot extends EventEmitter
      * @internal
      */
     on(event: "message_cursor", listener: (data: MessageCursor) => void): this;
+
+    /**
+     * Fired when a stats packet is received.
+     * @internal
+     */
+    on(event: "message_stats", listener: (data: MessageStats) => void): this;
 }
 
 /**
@@ -165,6 +171,7 @@ export class Bot extends EventEmitter
     private nextPingId: number = 0;
     private nextEditId: number = 0;
     private nextFetchId: number = 0;
+    private nextStatsId: number = 0;
 
     private flushInterval: NodeJS.Timeout;
     private writeBuffer: Write[] = [];
@@ -504,6 +511,35 @@ export class Bot extends EventEmitter
             this.on("message_ping", onmsg);
             this.transmit({
                 kind: "ping",
+                id
+            });
+        });
+    }
+
+    /**
+     * Get the world stats.
+     * @returns The world stats.
+     */
+    public stats(): Promise<Stats>
+    {
+        return new Promise((resolve, reject) =>
+        {
+            var id = ++this.nextStatsId;
+
+            var onmsg = (data: MessageStats) =>
+            {
+                if (data.id !== id) return;
+                
+                this.off("message_stats", onmsg);
+                resolve({
+                    creationDate: data.creationDate,
+                    views: data.views
+                });
+            }
+
+            this.on("message_stats", onmsg);
+            this.transmit({
+                kind: "stats",
                 id
             });
         });
@@ -1075,4 +1111,10 @@ enum WriteResultState
     Accepted,
     Ratelimited,
     Rejected
+}
+
+export interface Stats
+{
+    creationDate: number,
+    views: number
 }
