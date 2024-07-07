@@ -108,6 +108,11 @@ export interface ChatEvent
     date: Date;
 
     /**
+     * Custom metadata, if any.
+     */
+    customMeta?: { [key: string]: string };
+
+    /**
      * Sender's rank name, if any.
      */
     rankName?: string;

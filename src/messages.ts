@@ -32,6 +32,7 @@ export interface MessageChat
     message: string;
     color: string; // why
     date: number;
+    customMeta?: { [key: string]: string };
     rankName?: string;
     rankColor?: string; // why
     privateMessage?: "to_me" | "from_me";
@@ -89,6 +90,7 @@ interface ChatHistoryElement
     message: string;
     color: string; // why
     date: number;
+    customMeta?: { [key: string]: string };
     rankName?: string;
     rankColor?: string; // why
 }
