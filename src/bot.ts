@@ -524,10 +524,10 @@ export class Bot extends EventEmitter
     {
         this.transmit({
 			kind: "chat",
-			nickname: nickname,
-			message: message,
-			location: location,
-			color: color
+			nickname,
+			message,
+			location,
+			color
 		});
     }
 
