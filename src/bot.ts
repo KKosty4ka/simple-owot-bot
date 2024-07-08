@@ -267,6 +267,8 @@ export class Bot extends EventEmitter
                 color: data.color,
                 date: data.date,
 
+                customMeta: data.customMeta,
+
                 rankName: data.rankName,
                 rankColor: data.rankColor
             });
@@ -551,19 +553,21 @@ export class Bot extends EventEmitter
      * @param location - Where to send the message. {@link ChatLocation.Page} by default.
      * @param nickname - A nickname. Empty by default.
      * @param color - The name color, for some weird reason as a string. Black by default.
+     * @param customMeta - A custom metadata object. (optional)
      * @example
      * ```js
-     * bot.chat("Hi everyone!", ChatLocation.Global, "", "#112233");
+     * bot.chat("Hi everyone!", ChatLocation.Global, "", "#112233", {myMeta: "this is for other bots or scripts"});
      * ```
      */
-    public chat(message: string, location: ChatLocation = "page", nickname: string = "", color: string = "#000000"): void
+    public chat(message: string, location: ChatLocation = "page", nickname: string = "", color: string = "#000000", customMeta?: { [key: string]: string }): void
     {
         this.transmit({
 			kind: "chat",
 			nickname,
 			message,
 			location,
-			color
+			color,
+            customMeta
 		});
     }
 
