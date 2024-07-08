@@ -504,7 +504,7 @@ export class Bot extends EventEmitter
 
             var onmsg = (data: MessagePing) =>
             {
-                if (data.id != id) return;
+                if (data.id !== id) return;
 
                 this.off("message_ping", onmsg);
                 resolve(Date.now() - startDate);
@@ -927,10 +927,10 @@ export class Bot extends EventEmitter
         {
             for (var dx = tileX1; dx <= tileX2; dx++)
             {
-                var leftEdge = dx == tileX1 && charX1 > 0;
-                var topEdge = dy == tileY1 && charY1 > 0;
-                var rightEdge = dx == tileX2 && charX2 < (16 - 1);
-                var bottomEdge = dy == tileY2 && charY2 < (8 - 1);
+                var leftEdge = dx === tileX1 && charX1 > 0;
+                var topEdge = dy === tileY1 && charY1 > 0;
+                var rightEdge = dx === tileX2 && charX2 < (16 - 1);
+                var bottomEdge = dy === tileY2 && charY2 < (8 - 1);
                 var cx1 = 0;
                 var cy1 = 0;
                 var cx2 = 16 - 1;
@@ -1004,10 +1004,10 @@ export class Bot extends EventEmitter
         {
             for (var dx = tileX1; dx <= tileX2; dx++)
             {
-                var leftEdge = dx == tileX1 && charX1 > 0;
-                var topEdge = dy == tileY1 && charY1 > 0;
-                var rightEdge = dx == tileX2 && charX2 < (16 - 1);
-                var bottomEdge = dy == tileY2 && charY2 < (8 - 1);
+                var leftEdge = dx === tileX1 && charX1 > 0;
+                var topEdge = dy === tileY1 && charY1 > 0;
+                var rightEdge = dx === tileX2 && charX2 < (16 - 1);
+                var bottomEdge = dy === tileY2 && charY2 < (8 - 1);
                 var cx1 = 0;
                 var cy1 = 0;
                 var cx2 = 16 - 1;
